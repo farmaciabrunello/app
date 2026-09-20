@@ -22,16 +22,16 @@
     <title>Farmacia Brunello</title>
     <link rel="stylesheet" href="style.css">
     
-<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script>
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  OneSignalDeferred.push(async function(OneSignal) {
-    await OneSignal.init({
-      appId: "7baa9639-10e1-4357-bfa8-6ab1b6c4c688",
-      notifyButton: { enable: true },
-    });
-  });
-</script>
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      OneSignalDeferred.push(async function(OneSignal) {
+        await OneSignal.init({
+          appId: "7baa9639-10e1-4357-bfa8-6ab1b6c4c688",
+          notifyButton: { enable: true },
+        });
+      });
+    </script>
     
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 </head>
@@ -131,54 +131,56 @@
 </footer>
 
 <script>
-// 1. OneSignal & Notifiche
-window.OneSignalDeferred = window.OneSignalDeferred || [];
+    // 1. OneSignal & Notifiche
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
 
-function updateButtons() {
-    OneSignalDeferred.push(async function(OneSignal) {
-        const isOptedIn = OneSignal.User.PushSubscription.optedIn;
-        const hasPermission = OneSignal.Notifications.permission;
-        
-document.getElementById('subscribe-btn').addEventListener('click', () => {
-    OneSignalDeferred.push(async (OneSignal) => {
-        try {
-            // 1. Chiedi prima il permesso al browser
-            const permission = await OneSignal.Notifications.requestPermission();
+    function updateButtons() {
+        OneSignalDeferred.push(async function(OneSignal) {
+            const isOptedIn = OneSignal.User.PushSubscription.optedIn;
+            const hasPermission = OneSignal.Notifications.permission;
             
-            if (permission === "granted") {
-                // 2. Se l'utente accetta, attiva la sottoscrizione
-                await OneSignal.User.PushSubscription.optIn();
-                updateButtons();
-            } else if (permission === "denied") {
-                alert("Le notifiche risultano bloccate nelle impostazioni del browser. Sbloccale per continuare.");
+            document.getElementById('loading-status').style.display = 'none';
+
+            if (isOptedIn && hasPermission === "granted") {
+                document.getElementById('subscribe-btn').style.display = 'none';
+                document.getElementById('unsubscribe-btn').style.display = 'block';
+            } else {
+                document.getElementById('subscribe-btn').style.display = 'block';
+                document.getElementById('unsubscribe-btn').style.display = 'none';
             }
-        } catch (err) {
-            console.error("Errore durante l'attivazione notifiche:", err);
-            alert("Si è verificato un errore durante la richiesta permessi.");
-        }
-    });
-});
+        });
+    }
 
-// Esegui la verifica all'avvio della pagina e ascolta i cambiamenti
-OneSignalDeferred.push(function(OneSignal) {
-    updateButtons(); // <-- FONDAMENTALE: verifica subito lo stato
-    OneSignal.User.PushSubscription.addEventListener("change", updateButtons);
-});
-
-document.getElementById('subscribe-btn').addEventListener('click', () => {
-    OneSignalDeferred.push(async (OneSignal) => {
-        await OneSignal.User.PushSubscription.optIn();
-        await OneSignal.Notifications.requestPermission();
+    // Inizializza l'ascoltatore e verifica lo stato all'avvio
+    OneSignalDeferred.push(function(OneSignal) {
         updateButtons();
+        OneSignal.User.PushSubscription.addEventListener("change", updateButtons);
     });
-});
 
-document.getElementById('unsubscribe-btn').addEventListener('click', () => {
-    OneSignalDeferred.push((OneSignal) => {
-        OneSignal.User.PushSubscription.optOut();
-        updateButtons();
+    // Gestore del click per attivare le notifiche
+    document.getElementById('subscribe-btn').addEventListener('click', () => {
+        OneSignalDeferred.push(async (OneSignal) => {
+            try {
+                const permission = await OneSignal.Notifications.requestPermission();
+                if (permission === "granted") {
+                    await OneSignal.User.PushSubscription.optIn();
+                    updateButtons();
+                } else if (permission === "denied") {
+                    alert("Le notifiche risultano bloccate nelle impostazioni del browser. Sbloccale per continuare.");
+                }
+            } catch (err) {
+                console.error("Errore durante l'attivazione notifiche:", err);
+            }
+        });
     });
-});
+
+    // Gestore del click per disattivare le notifiche
+    document.getElementById('unsubscribe-btn').addEventListener('click', () => {
+        OneSignalDeferred.push((OneSignal) => {
+            OneSignal.User.PushSubscription.optOut();
+            updateButtons();
+        });
+    });
 
     // 2. Navigazione tra sezioni
     const navItems = document.querySelectorAll('.nav-item');
@@ -206,7 +208,6 @@ document.getElementById('unsubscribe-btn').addEventListener('click', () => {
     // 3. Caricamento Eventi
     async function loadEvents() {
         const eventsList = document.getElementById('events-list');
-        // Aggiunto ?sheet=Eventi per sicurezza
         const API_URL = 'https://sheetdb.io/api/v1/mcvst24hmpts3?sheet=Eventi';
         const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1586015555751-63bb77f4322a?q=80&w=1000&auto=format&fit=crop';
 
@@ -252,7 +253,6 @@ document.getElementById('unsubscribe-btn').addEventListener('click', () => {
                 const inizio = new Date(turno.inizio);
                 const fine = new Date(turno.fine);
                 
-                // Logica turno attuale
                 if (today >= inizio && today < fine) {
                     containerAttuale.src = turno.immagine;
                     if(data[index-1]) aggiungiMiniatura(data[index-1], "Sett. Precedente");
