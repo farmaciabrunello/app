@@ -67,13 +67,20 @@
 <main class="scrollable-content">
     <div id="home-content">
         <section class="section notification-panel">
-            <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                <h3 style="margin-bottom: 10px; font-size: 1rem;">Resta aggiornato</h3>
-                <div id="loading-status">Verifica stato...</div>
-                <button id="subscribe-btn" class="btn btn-subscribe" style="display:none;">🔔 Attiva Notifiche</button>
-                <button id="unsubscribe-btn" class="btn btn-unsubscribe" style="display:none;">🔕 Disattiva Notifiche</button>
-            </div>
-        </section>
+    <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center;">
+        <h3 style="margin-bottom: 10px; font-size: 1rem;">Resta aggiornato</h3>
+        <div id="loading-status" style="font-size: 0.9rem; color: #666;">Inizializzazione notifiche...</div>
+        
+        <!-- Aggiunto onclick diretto e cursor:pointer per garantire il click -->
+        <button id="subscribe-btn" onclick="gestisciIscrizione()" class="btn btn-subscribe" style="display:none; cursor: pointer; padding: 10px 15px; margin: 10px auto; background-color: #28a745; color: white; border: none; border-radius: 8px; font-weight: bold;">
+            🔔 Attiva Notifiche
+        </button>
+        
+        <button id="unsubscribe-btn" onclick="gestisciDisiscrizione()" class="btn btn-unsubscribe" style="display:none; cursor: pointer; padding: 10px 15px; margin: 10px auto; background-color: #dc3545; color: white; border: none; border-radius: 8px; font-weight: bold;">
+            🔕 Disattiva Notifiche
+        </button>
+    </div>
+</section>
 
         <section class="events-section">
             <div class="section-header">
