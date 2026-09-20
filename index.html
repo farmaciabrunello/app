@@ -139,17 +139,25 @@ function updateButtons() {
         const isOptedIn = OneSignal.User.PushSubscription.optedIn;
         const hasPermission = OneSignal.Notifications.permission;
         
-        document.getElementById('loading-status').style.display = 'none';
-
-        if (isOptedIn && hasPermission === "granted") {
-            document.getElementById('subscribe-btn').style.display = 'none';
-            document.getElementById('unsubscribe-btn').style.display = 'block';
-        } else {
-            document.getElementById('subscribe-btn').style.display = 'block';
-            document.getElementById('unsubscribe-btn').style.display = 'none';
+document.getElementById('subscribe-btn').addEventListener('click', () => {
+    OneSignalDeferred.push(async (OneSignal) => {
+        try {
+            // 1. Chiedi prima il permesso al browser
+            const permission = await OneSignal.Notifications.requestPermission();
+            
+            if (permission === "granted") {
+                // 2. Se l'utente accetta, attiva la sottoscrizione
+                await OneSignal.User.PushSubscription.optIn();
+                updateButtons();
+            } else if (permission === "denied") {
+                alert("Le notifiche risultano bloccate nelle impostazioni del browser. Sbloccale per continuare.");
+            }
+        } catch (err) {
+            console.error("Errore durante l'attivazione notifiche:", err);
+            alert("Si è verificato un errore durante la richiesta permessi.");
         }
     });
-}
+});
 
 // Esegui la verifica all'avvio della pagina e ascolta i cambiamenti
 OneSignalDeferred.push(function(OneSignal) {
