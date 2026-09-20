@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#ffffff">
 
-    <!-- Icone iOS Home Screen (con retrocompatibilità) -->
+    <!-- Icone iOS Home Screen -->
     <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
     <link rel="apple-touch-icon-precomposed" sizes="180x180" href="icons/apple-touch-icon.png">
 
@@ -22,16 +22,8 @@
     <title>Farmacia Brunello</title>
     <link rel="stylesheet" href="style.css">
     
+    <!-- SDK OneSignal (Caricamento deferito) -->
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-    <script>
-      window.OneSignalDeferred = window.OneSignalDeferred || [];
-      OneSignalDeferred.push(async function(OneSignal) {
-        await OneSignal.init({
-          appId: "7baa9639-10e1-4357-bfa8-6ab1b6c4c688",
-          notifyButton: { enable: true },
-        });
-      });
-    </script>
     
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 </head>
@@ -44,43 +36,42 @@
                 <img src="assets/vectors/logo-farmacia.svg" alt="Farmacia Brunello" class="logo-image">
             </a>
         </div>
-      <div class="header-icons">
-    <a href="https://wa.me/390422491591" class="header-btn" target="_blank">
-        <div class="icon-wrapper">
-            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path fill="currentColor" d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.185-.573c.948.517 2.011.888 3.146.889h.001c3.182 0 5.767-2.587 5.768-5.766 0-3.18-2.586-5.765-5.769-5.765zm3.425 8.311c-.14.397-.714.726-1.12.776-.364.045-.838.077-2.396-.548-1.992-.799-3.273-2.822-3.372-2.955-.1-.133-.815-1.082-.815-2.064s.508-1.467.689-1.666c.181-.199.395-.249.526-.249s.263.003.378.009c.124.006.29-.047.454.346.164.397.562 1.37.611 1.47.049.1.082.215.017.348-.066.133-.099.215-.198.331-.099.115-.208.258-.296.353-.099.108-.202.226-.087.424.115.197.511.844 1.093 1.362.749.667 1.381.874 1.578.973.197.1.312.083.427-.049.115-.133.493-.573.624-.769.131-.197.263-.166.444-.1s1.15.542 1.347.641c.197.1.329.15.378.233.05.083.05.481-.09.878z"/>
-            </svg>
-        </div>
-        <span class="header-btn-label">WHATSAPP</span>
-    </a>
+        <div class="header-icons">
+            <a href="https://wa.me/390422491591" class="header-btn" target="_blank">
+                <div class="icon-wrapper">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path fill="currentColor" d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.185-.573c.948.517 2.011.888 3.146.889h.001c3.182 0 5.767-2.587 5.768-5.766 0-3.18-2.586-5.765-5.769-5.765zm3.425 8.311c-.14.397-.714.726-1.12.776-.364.045-.838.077-2.396-.548-1.992-.799-3.273-2.822-3.372-2.955-.1-.133-.815-1.082-.815-2.064s.508-1.467.689-1.666c.181-.199.395-.249.526-.249s.263.003.378.009c.124.006.29-.047.454.346.164.397.562 1.37.611 1.47.049.1.082.215.017.348-.066.133-.099.215-.198.331-.099.115-.208.258-.296.353-.099.108-.202.226-.087.424.115.197.511.844 1.093 1.362.749.667 1.381.874 1.578.973.197.1.312.083.427-.049.115-.133.493-.573.624-.769.131-.197.263-.166.444-.1s1.15.542 1.347.641c.197.1.329.15.378.233.05.083.05.481-.09.878z"/>
+                    </svg>
+                </div>
+                <span class="header-btn-label">WHATSAPP</span>
+            </a>
 
-    <a href="tel:+390422491591" class="header-btn">
-        <div class="icon-wrapper">
-            <span class="material-symbols-outlined">call</span>
+            <a href="tel:+390422491591" class="header-btn">
+                <div class="icon-wrapper">
+                    <span class="material-symbols-outlined">call</span>
+                </div>
+                <span class="header-btn-label">CHIAMA</span>
+            </a>
         </div>
-        <span class="header-btn-label">CHIAMA</span>
-    </a>
-</div>
     </div>
 </header>
     
 <main class="scrollable-content">
     <div id="home-content">
         <section class="section notification-panel">
-    <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center;">
-        <h3 style="margin-bottom: 10px; font-size: 1rem;">Resta aggiornato</h3>
-        <div id="loading-status" style="font-size: 0.9rem; color: #666;">Inizializzazione notifiche...</div>
-        
-        <!-- Aggiunto onclick diretto e cursor:pointer per garantire il click -->
-        <button id="subscribe-btn" onclick="gestisciIscrizione()" class="btn btn-subscribe" style="display:none; cursor: pointer; padding: 10px 15px; margin: 10px auto; background-color: #28a745; color: white; border: none; border-radius: 8px; font-weight: bold;">
-            🔔 Attiva Notifiche
-        </button>
-        
-        <button id="unsubscribe-btn" onclick="gestisciDisiscrizione()" class="btn btn-unsubscribe" style="display:none; cursor: pointer; padding: 10px 15px; margin: 10px auto; background-color: #dc3545; color: white; border: none; border-radius: 8px; font-weight: bold;">
-            🔕 Disattiva Notifiche
-        </button>
-    </div>
-</section>
+            <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center;">
+                <h3 style="margin-bottom: 10px; font-size: 1rem;">Resta aggiornato</h3>
+                <div id="loading-status" style="font-size: 0.9rem; color: #666;">Inizializzazione notifiche...</div>
+                
+                <button id="subscribe-btn" onclick="gestisciIscrizione()" class="btn btn-subscribe" style="display:none; cursor: pointer; padding: 10px 15px; margin: 10px auto; background-color: #28a745; color: white; border: none; border-radius: 8px; font-weight: bold;">
+                    🔔 Attiva Notifiche
+                </button>
+                
+                <button id="unsubscribe-btn" onclick="gestisciDisiscrizione()" class="btn btn-unsubscribe" style="display:none; cursor: pointer; padding: 10px 15px; margin: 10px auto; background-color: #dc3545; color: white; border: none; border-radius: 8px; font-weight: bold;">
+                    🔕 Disattiva Notifiche
+                </button>
+            </div>
+        </section>
 
         <section class="events-section">
             <div class="section-header">
@@ -108,7 +99,7 @@
         <div id="altri-turni" style="margin-top: 25px;">
             <p style="font-size: 0.8rem; font-weight: bold; color: var(--ios-grey); text-transform: uppercase;">Altre settimane</p>
             <div class="events-container" id="lista-altri-turni" style="padding: 10px 0;">
-                </div>
+            </div>
         </div>
     </section>
 
@@ -138,7 +129,7 @@
 </footer>
 
 <script>
-    // 1. Inizializzazione OneSignal e funzioni globali
+    // 1. Inizializzazione OneSignal e Logica Pulsanti
     window.OneSignalDeferred = window.OneSignalDeferred || [];
 
     function updateButtons() {
@@ -166,18 +157,22 @@
         });
     }
 
-    // Inizializzazione
-    OneSignalDeferred.push(function(OneSignal) {
+    // Configurazione ed Esecuzione al Caricamento di OneSignal
+    OneSignalDeferred.push(async function(OneSignal) {
+        await OneSignal.init({
+            appId: "7baa9639-10e1-4357-bfa8-6ab1b6c4c688",
+            notifyButton: { enable: false } // Disabilitato il pulsante nativo di OneSignal dato che usiamo i pulsanti personalizzati
+        });
+
         updateButtons();
         OneSignal.User.PushSubscription.addEventListener("change", updateButtons);
     });
 
-    // Funzione richiamata direttamente al click del tasto VERDE
+    // Funzione per Iscrizione (Bottone Verde)
     function gestisciIscrizione() {
         console.log("Pulsante iscrizione premuto");
         OneSignalDeferred.push(async function(OneSignal) {
             try {
-                // Richiede il permesso al browser
                 const permission = await OneSignal.Notifications.requestPermission();
                 if (permission === "granted") {
                     await OneSignal.User.PushSubscription.optIn();
@@ -192,7 +187,7 @@
         });
     }
 
-    // Funzione richiamata direttamente al click del tasto ROSSO
+    // Funzione per Disiscrizione (Bottone Rosso)
     function gestisciDisiscrizione() {
         console.log("Pulsante disiscrizione premuto");
         OneSignalDeferred.push(async function(OneSignal) {
