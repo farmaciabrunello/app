@@ -138,72 +138,59 @@
 </footer>
 
 <script>
-    // 1. Inizializzazione OneSignal e funzioni globali
-    window.OneSignalDeferred = window.OneSignalDeferred || [];
+   // 1. Logica semplificata
+window.OneSignalDeferred = window.OneSignalDeferred || [];
 
-    function updateButtons() {
-        OneSignalDeferred.push(async function(OneSignal) {
-            try {
-                const isOptedIn = OneSignal.User.PushSubscription.optedIn;
-                const hasPermission = OneSignal.Notifications.permission;
-                
-                const statusElem = document.getElementById('loading-status');
-                const subBtn = document.getElementById('subscribe-btn');
-                const unsubBtn = document.getElementById('unsubscribe-btn');
+function updateButtons() {
+    OneSignalDeferred.push(async function(OneSignal) {
+        // Verifica lo stato dell'iscrizione
+        const isOptedIn = OneSignal.User.PushSubscription.optedIn;
+        const isGranted = (Notification.permission === "granted");
 
-                if (statusElem) statusElem.style.display = 'none';
+        const statusElem = document.getElementById('loading-status');
+        const subBtn = document.getElementById('subscribe-btn');
+        const unsubBtn = document.getElementById('unsubscribe-btn');
 
-                if (isOptedIn && hasPermission === "granted") {
-                    if (subBtn) subBtn.style.display = 'none';
-                    if (unsubBtn) unsubBtn.style.display = 'block';
-                } else {
-                    if (subBtn) subBtn.style.display = 'block';
-                    if (unsubBtn) unsubBtn.style.display = 'none';
-                }
-            } catch (err) {
-                console.error("Errore aggiornamento pulsanti:", err);
-            }
-        });
-    }
+        if (statusElem) statusElem.style.display = 'none';
 
-    // Inizializzazione
-    OneSignalDeferred.push(function(OneSignal) {
-        updateButtons();
-        OneSignal.User.PushSubscription.addEventListener("change", updateButtons);
+        // Se l'utente è iscritto in OneSignal OPPURE ha già dato il permesso nel browser
+        if (isOptedIn && isGranted) {
+            if (subBtn) subBtn.style.display = 'none';
+            if (unsubBtn) unsubBtn.style.display = 'block';
+        } else {
+            if (subBtn) subBtn.style.display = 'block';
+            if (unsubBtn) unsubBtn.style.display = 'none';
+        }
     });
+}
 
-    // Funzione richiamata direttamente al click del tasto VERDE
-    function gestisciIscrizione() {
-        console.log("Pulsante iscrizione premuto");
-        OneSignalDeferred.push(async function(OneSignal) {
-            try {
-                // Richiede il permesso al browser
-                const permission = await OneSignal.Notifications.requestPermission();
-                if (permission === "granted") {
-                    await OneSignal.User.PushSubscription.optIn();
-                    updateButtons();
-                } else if (permission === "denied") {
-                    alert("Le notifiche sono bloccate dal browser. Per attivarle, modifica i permessi del sito nelle impostazioni del tuo browser.");
-                }
-            } catch (err) {
-                console.error("Errore durante l'attivazione:", err);
-                alert("Si è verificato un errore nell'attivazione delle notifiche.");
-            }
-        });
-    }
+OneSignalDeferred.push(function(OneSignal) {
+    updateButtons();
+    OneSignal.User.PushSubscription.addEventListener("change", updateButtons);
+});
 
-    // Funzione richiamata direttamente al click del tasto ROSSO
-    function gestisciDisiscrizione() {
-        console.log("Pulsante disiscrizione premuto");
-        OneSignalDeferred.push(async function(OneSignal) {
-            try {
-                await OneSignal.User.PushSubscription.optOut();
-                updateButtons();
-            } catch (err) {
-                console.error("Errore durante la disattivazione:", err);
-            }
-        });
-    }
+async function gestisciIscrizione() {
+    OneSignalDeferred.push(async function(OneSignal) {
+        try {
+            await OneSignal.Notifications.requestPermission();
+            await OneSignal.User.PushSubscription.optIn();
+            updateButtons();
+        } catch (e) {
+            console.error(e);
+        }
+    });
+}
+
+async function gestisciDisiscrizione() {
+    OneSignalDeferred.push(async function(OneSignal) {
+        try {
+            await OneSignal.User.PushSubscription.optOut();
+            updateButtons();
+        } catch (e) {
+            console.error(e);
+        }
+    });
+}
 
     // 2. Navigazione tra sezioni
     const navItems = document.querySelectorAll('.nav-item');
