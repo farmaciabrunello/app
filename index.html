@@ -66,12 +66,11 @@
     
 <main class="scrollable-content">
     <div id="home-content">
-        <section class="section notification-panel">
+       <section class="section notification-panel">
     <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center;">
         <h3 style="margin-bottom: 10px; font-size: 1rem;">Resta aggiornato</h3>
-        <div id="loading-status" style="font-size: 0.9rem; color: #666;">Inizializzazione notifiche...</div>
+        <div id="loading-status" style="font-size: 0.9rem; color: #666;">Verifica stato...</div>
         
-        <!-- Aggiunto onclick diretto e cursor:pointer per garantire il click -->
         <button id="subscribe-btn" onclick="gestisciIscrizione()" class="btn btn-subscribe" style="display:none; cursor: pointer; padding: 10px 15px; margin: 10px auto; background-color: #28a745; color: white; border: none; border-radius: 8px; font-weight: bold;">
             🔔 Attiva Notifiche
         </button>
@@ -138,59 +137,83 @@
 </footer>
 
 <script>
-   // 1. Logica semplificata
-window.OneSignalDeferred = window.OneSignalDeferred || [];
+    // 1. Logica OneSignal con ascolto dinamico dello stato
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
 
-function updateButtons() {
-    OneSignalDeferred.push(async function(OneSignal) {
-        // Verifica lo stato dell'iscrizione
-        const isOptedIn = OneSignal.User.PushSubscription.optedIn;
-        const isGranted = (Notification.permission === "granted");
+    // Funzione principale di aggiornamento pulsanti
+    async function updateButtons() {
+        OneSignalDeferred.push(async function(OneSignal) {
+            try {
+                // Legge lo stato reale dal modulo PushSubscription di OneSignal v16
+                const isOptedIn = OneSignal.User.PushSubscription.optedIn;
+                const permission = OneSignal.Notifications.permission;
+                
+                console.log("Stato di iscrizione:", isOptedIn, "| Permesso browser:", permission);
 
-        const statusElem = document.getElementById('loading-status');
-        const subBtn = document.getElementById('subscribe-btn');
-        const unsubBtn = document.getElementById('unsubscribe-btn');
+                const statusElem = document.getElementById('loading-status');
+                const subBtn = document.getElementById('subscribe-btn');
+                const unsubBtn = document.getElementById('unsubscribe-btn');
 
-        if (statusElem) statusElem.style.display = 'none';
+                if (statusElem) statusElem.style.display = 'none';
 
-        // Se l'utente è iscritto in OneSignal OPPURE ha già dato il permesso nel browser
-        if (isOptedIn && isGranted) {
-            if (subBtn) subBtn.style.display = 'none';
-            if (unsubBtn) unsubBtn.style.display = 'block';
-        } else {
-            if (subBtn) subBtn.style.display = 'block';
-            if (unsubBtn) unsubBtn.style.display = 'none';
-        }
-    });
-}
+                // Se l'utente è registrato ed ha concesso il permesso
+                if (isOptedIn && permission) {
+                    if (subBtn) subBtn.style.display = 'none';
+                    if (unsubBtn) unsubBtn.style.display = 'block';
+                } else {
+                    if (subBtn) subBtn.style.display = 'block';
+                    if (unsubBtn) unsubBtn.style.display = 'none';
+                }
+            } catch (err) {
+                console.error("Errore lettura stato OneSignal:", err);
+            }
+        });
+    }
 
-OneSignalDeferred.push(function(OneSignal) {
-    updateButtons();
-    OneSignal.User.PushSubscription.addEventListener("change", updateButtons);
-});
+    // Registrazione Event Listener al caricamento
+    OneSignalDeferred.push(function(OneSignal) {
+        // Controllo iniziale
+        updateButtons();
 
-async function gestisciIscrizione() {
-    OneSignalDeferred.push(async function(OneSignal) {
-        try {
-            await OneSignal.Notifications.requestPermission();
-            await OneSignal.User.PushSubscription.optIn();
+        // Si attiva AUTOMATICAMENTE quando l'utente completa l'iscrizione/disiscrizione
+        OneSignal.User.PushSubscription.addEventListener("change", function(event) {
+            console.log("Evento cambio iscrizione intercettato:", event);
             updateButtons();
-        } catch (e) {
-            console.error(e);
-        }
+        });
     });
-}
 
-async function gestisciDisiscrizione() {
-    OneSignalDeferred.push(async function(OneSignal) {
-        try {
-            await OneSignal.User.PushSubscription.optOut();
-            updateButtons();
-        } catch (e) {
-            console.error(e);
-        }
-    });
-}
+    // Azione al click su "Attiva Notifiche" (Tasto Verde)
+    function gestisciIscrizione() {
+        OneSignalDeferred.push(async function(OneSignal) {
+            try {
+                // 1. Richiedi permesso al browser
+                await OneSignal.Notifications.requestPermission();
+                
+                // 2. Registra l'utente
+                await OneSignal.User.PushSubscription.optIn();
+                
+                // 3. Forzatura aggiornamento con ritardo per sincronizzazione SDK
+                setTimeout(updateButtons, 300);
+            } catch (err) {
+                console.error("Errore durante optIn:", err);
+            }
+        });
+    }
+
+    // Azione al click su "Disattiva Notifiche" (Tasto Rosso)
+    function gestisciDisiscrizione() {
+        OneSignalDeferred.push(async function(OneSignal) {
+            try {
+                // Rimuove l'iscrizione
+                await OneSignal.User.PushSubscription.optOut();
+                
+                // Forzatura aggiornamento
+                setTimeout(updateButtons, 300);
+            } catch (err) {
+                console.error("Errore durante optOut:", err);
+            }
+        });
+    }
 
     // 2. Navigazione tra sezioni
     const navItems = document.querySelectorAll('.nav-item');
