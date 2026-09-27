@@ -299,8 +299,9 @@ body {
     transition: transform 0.05s ease-out;
 }
 
+/* Tasto Chiudi (X) ottimizzato per evitare ghosting su iOS */
 .close-modal {
-    position: fixed;
+    position: absolute; /* Cambiato da fixed ad absolute per eliminare l'artefatto visivo su iOS */
     top: calc(env(safe-area-inset-top) + 15px);
     right: 20px;
     color: #ffffff;
