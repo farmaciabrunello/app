@@ -74,8 +74,7 @@ notifyButton: { enable: true },
 
 <!-- BANNER OFFERTE DEL MESE -->
 <section class="promo-month-section">
-  <!-- Mettiamo href="#" come valore provvisorio -->
-  <a id="https://docs.google.com/spreadsheets/d/e/2PACX-1vR_EaTRsfUeqaRmkHSa814SNam_pdpyybRgeM2VtbOsbsXfv_7WhSx469O_eSVEI8Xv01xDdEXzLRzM/pubhtml" href="#" target="_blank" class="promo-banner-link">
+  <a id="promo-link" href="#" target="_blank" class="promo-banner-link">
     <img src="assets/images/LeOfferteDelMese.webp" alt="Le Offerte del Mese - Scarica il Volantino" class="promo-banner-img">
   </a>
 </section>
@@ -159,7 +158,6 @@ window.OneSignalDeferred = window.OneSignalDeferred || [];
 async function updateButtons() {
 OneSignalDeferred.push(async function(OneSignal) {
 try {
-// Legge lo stato reale dal modulo PushSubscription di OneSignal v16
 const isOptedIn = OneSignal.User.PushSubscription.optedIn;
 const permission = OneSignal.Notifications.permission;
 console.log("Stato di iscrizione:", isOptedIn, "| Permesso browser:", permission);
@@ -171,17 +169,12 @@ const settingsUnsubBtn = document.getElementById('settings-unsubscribe-btn');
 
 if (settingsStatus) settingsStatus.style.display = 'none';
 
-// Se l'utente è registrato ed ha concesso il permesso
 if (isOptedIn && permission) {
-// Nascondiamo il pannello in Home
 if (homePanel) homePanel.style.display = 'none';
-// Nelle impostazioni mostriamo solo il tasto disattiva
 if (settingsSubBtn) settingsSubBtn.style.display = 'none';
 if (settingsUnsubBtn) settingsUnsubBtn.style.display = 'block';
 } else {
-// Mostriamo il pannello in Home
 if (homePanel) homePanel.style.display = 'block';
-// Nelle impostazioni mostriamo solo il tasto attiva
 if (settingsSubBtn) settingsSubBtn.style.display = 'block';
 if (settingsUnsubBtn) settingsUnsubBtn.style.display = 'none';
 }
@@ -191,27 +184,19 @@ console.error("Errore lettura stato OneSignal:", err);
 });
 }
 
-// Registrazione Event Listener al caricamento
 OneSignalDeferred.push(function(OneSignal) {
-// Controllo iniziale
 updateButtons();
-
-// Si attiva AUTOMATICAMENTE quando l'utente completa l'iscrizione/disiscrizione
 OneSignal.User.PushSubscription.addEventListener("change", function(event) {
 console.log("Evento cambio iscrizione intercettato:", event);
 updateButtons();
 });
 });
 
-// Azione al click su "Attiva Notifiche" (Tasto Verde)
 function gestisciIscrizione() {
 OneSignalDeferred.push(async function(OneSignal) {
 try {
-// 1. Richiedi permesso al browser
 await OneSignal.Notifications.requestPermission();
-// 2. Registra l'utente
 await OneSignal.User.PushSubscription.optIn();
-// 3. Forzatura aggiornamento con ritardo per sincronizzazione SDK
 setTimeout(updateButtons, 300);
 } catch (err) {
 console.error("Errore durante optIn:", err);
@@ -219,13 +204,10 @@ console.error("Errore durante optIn:", err);
 });
 }
 
-// Azione al click su "Disattiva Notifiche" (Tasto Rosso)
 function gestisciDisiscrizione() {
 OneSignalDeferred.push(async function(OneSignal) {
 try {
-// Rimuove l'iscrizione
 await OneSignal.User.PushSubscription.optOut();
-// Forzatura aggiornamento
 setTimeout(updateButtons, 300);
 } catch (err) {
 console.error("Errore durante optOut:", err);
@@ -245,12 +227,10 @@ const homeContent = document.getElementById('home-content');
 const turniSection = document.getElementById('turni-section');
 const impostazioniSection = document.getElementById('impostazioni-section');
 
-// Nascondiamo tutto di default
 if (homeContent) homeContent.style.display = 'none';
 if (turniSection) turniSection.style.display = 'none';
 if (impostazioniSection) impostazioniSection.style.display = 'none';
 
-// Mostriamo solo la sezione selezionata
 if (label === 'TURNI') {
 if (turniSection) turniSection.style.display = 'block';
 loadTurni();
@@ -344,33 +324,19 @@ imgZoomato.src = src;
 document.querySelector(".close-modal").onclick = () => modal.style.display = "none";
 window.onclick = (event) => { if (event.target == modal) modal.style.display = "none"; };
 
-// Init
-loadEvents();
-</script>
-
-// Incolla qui il link CSV del tuo foglio di calcolo
-// (Assicurati che sia il CSV del Foglio1, di solito finisce con gid=0 o simile)
+// 6. Caricamento Dinamico Volantino da Google Sheets
 const SHEET_CONFIG_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_EaTRsfUeqaRmkHSa814SNam_pdpyybRgeM2VtbOsbsXfv_7WhSx469O_eSVEI8Xv01xDdEXzLRzM/pub?gid=0&single=true&output=csv";
 
 async function caricaConfigurazioneApp() {
   try {
     const response = await fetch(SHEET_CONFIG_CSV);
     const dataText = await response.text();
-    
-    // Dividiamo il foglio in righe
     const righe = dataText.split(/\r?\n/);
     
     if (righe.length > 0) {
-      // Prendiamo la Riga 1
-      const primaRiga = righe[0];
-      
-      // Separiamo la riga nelle sue colonne A, B, C... (gestisce sia virgole che punti e virgola)
-      const colonne = primaRiga.split(/[,;]/);
-      
-      // Cella B1 = Indice 1 (A1 è l'indice 0, B1 è l'indice 1)
+      const colonne = righe[0].split(/[,;]/);
       const linkVolantino = colonne[1] ? colonne[1].replace(/"/g, '').trim() : '';
 
-      // Se la cella B1 contiene un link valido, aggiorniamo il banner
       if (linkVolantino && linkVolantino.startsWith('http')) {
         const bannerLink = document.getElementById('promo-link');
         if (bannerLink) {
@@ -383,8 +349,9 @@ async function caricaConfigurazioneApp() {
   }
 }
 
-// Avvia il caricamento quando la pagina è pronta
-document.addEventListener('DOMContentLoaded', caricaConfigurazioneApp);
-  
+// Init
+loadEvents();
+caricaConfigurazioneApp();
+</script>
 </body>
 </html>
