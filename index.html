@@ -145,13 +145,19 @@ notifyButton: { enable: true },
 </div>
 </footer>
 
+<!-- Modal Ingrandimento Immagini -->
+<div id="zoom-modal" class="modal">
+  <span class="close-modal">&times;</span>
+  <img class="modal-content" id="img-zoomato" alt="Ingrandimento Turno">
+</div>
+
 <script>
 // --- 1. CONFIGURAZIONE LINK GOOGLE SHEETS (CSV) ---
 const SHEET_CONFIG_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_EaTRsfUeqaRmkHSa814SNam_pdpyybRgeM2VtbOsbsXfv_7WhSx469O_eSVEI8Xv01xDdEXzLRzM/pub?gid=0&single=true&output=csv";
 const SHEET_EVENTI_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_EaTRsfUeqaRmkHSa814SNam_pdpyybRgeM2VtbOsbsXfv_7WhSx469O_eSVEI8Xv01xDdEXzLRzM/pub?gid=1635755565&single=true&output=csv";
 const SHEET_TURNI_CSV  = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_EaTRsfUeqaRmkHSa814SNam_pdpyybRgeM2VtbOsbsXfv_7WhSx469O_eSVEI8Xv01xDdEXzLRzM/pub?gid=2033273365&single=true&output=csv";
 
-// Funzione helper per convertire il formato CSV di Google Sheets in Array di Oggetti
+// Helper robusto per la conversione CSV
 function csvToObjects(csvText) {
   const lines = csvText.trim().split(/\r?\n/);
   if (lines.length < 2) return [];
@@ -160,11 +166,26 @@ function csvToObjects(csvText) {
   
   return lines.slice(1).map(line => {
     if (!line.trim()) return null;
-    const values = line.match(/(".*?"|[^",;]+)(?=\s*[,;]|\s*$)/g) || line.split(/[,;]/);
+    
+    const values = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if ((char === ',' || char === ';') && !inQuotes) {
+        values.push(current.replace(/^"|"$/g, '').trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    values.push(current.replace(/^"|"$/g, '').trim());
+    
     const obj = {};
     headers.forEach((header, index) => {
-      let val = values[index] ? values[index].replace(/^"|"$/g, '').trim() : '';
-      obj[header] = val;
+      obj[header] = values[index] || '';
     });
     return obj;
   }).filter(Boolean);
@@ -174,204 +195,214 @@ function csvToObjects(csvText) {
 window.OneSignalDeferred = window.OneSignalDeferred || [];
 
 async function updateButtons() {
-OneSignalDeferred.push(async function(OneSignal) {
-try {
-const isOptedIn = OneSignal.User.PushSubscription.optedIn;
-const permission = OneSignal.Notifications.permission;
+  OneSignalDeferred.push(async function(OneSignal) {
+    try {
+      const isOptedIn = OneSignal.User.PushSubscription.optedIn;
+      const permission = OneSignal.Notifications.permission;
 
-const homePanel = document.getElementById('home-notification-panel');
-const settingsStatus = document.getElementById('settings-loading-status');
-const settingsSubBtn = document.getElementById('settings-subscribe-btn');
-const settingsUnsubBtn = document.getElementById('settings-unsubscribe-btn');
+      const homePanel = document.getElementById('home-notification-panel');
+      const settingsStatus = document.getElementById('settings-loading-status');
+      const settingsSubBtn = document.getElementById('settings-subscribe-btn');
+      const settingsUnsubBtn = document.getElementById('settings-unsubscribe-btn');
 
-if (settingsStatus) settingsStatus.style.display = 'none';
+      if (settingsStatus) settingsStatus.style.display = 'none';
 
-if (isOptedIn && permission) {
-if (homePanel) homePanel.style.display = 'none';
-if (settingsSubBtn) settingsSubBtn.style.display = 'none';
-if (settingsUnsubBtn) settingsUnsubBtn.style.display = 'block';
-} else {
-if (homePanel) homePanel.style.display = 'block';
-if (settingsSubBtn) settingsSubBtn.style.display = 'block';
-if (settingsUnsubBtn) settingsUnsubBtn.style.display = 'none';
-}
-} catch (err) {
-console.error("Errore lettura stato OneSignal:", err);
-}
-});
+      if (isOptedIn && permission) {
+        if (homePanel) homePanel.style.display = 'none';
+        if (settingsSubBtn) settingsSubBtn.style.display = 'none';
+        if (settingsUnsubBtn) settingsUnsubBtn.style.display = 'block';
+      } else {
+        if (homePanel) homePanel.style.display = 'block';
+        if (settingsSubBtn) settingsSubBtn.style.display = 'block';
+        if (settingsUnsubBtn) settingsUnsubBtn.style.display = 'none';
+      }
+    } catch (err) {
+      console.error("Errore lettura stato OneSignal:", err);
+    }
+  });
 }
 
 OneSignalDeferred.push(function(OneSignal) {
-updateButtons();
-OneSignal.User.PushSubscription.addEventListener("change", function(event) {
-updateButtons();
-});
+  updateButtons();
+  OneSignal.User.PushSubscription.addEventListener("change", function(event) {
+    updateButtons();
+  });
 });
 
 function gestisciIscrizione() {
-OneSignalDeferred.push(async function(OneSignal) {
-try {
-await OneSignal.Notifications.requestPermission();
-await OneSignal.User.PushSubscription.optIn();
-setTimeout(updateButtons, 300);
-} catch (err) {
-console.error("Errore durante optIn:", err);
-}
-});
+  OneSignalDeferred.push(async function(OneSignal) {
+    try {
+      await OneSignal.Notifications.requestPermission();
+      await OneSignal.User.PushSubscription.optIn();
+      setTimeout(updateButtons, 300);
+    } catch (err) {
+      console.error("Errore durante optIn:", err);
+    }
+  });
 }
 
 function gestisciDisiscrizione() {
-OneSignalDeferred.push(async function(OneSignal) {
-try {
-await OneSignal.User.PushSubscription.optOut();
-setTimeout(updateButtons, 300);
-} catch (err) {
-console.error("Errore durante optOut:", err);
-}
-});
+  OneSignalDeferred.push(async function(OneSignal) {
+    try {
+      await OneSignal.User.PushSubscription.optOut();
+      setTimeout(updateButtons, 300);
+    } catch (err) {
+      console.error("Errore durante optOut:", err);
+    }
+  });
 }
 
 // --- 3. NAVIGAZIONE ---
 const navItems = document.querySelectorAll('.nav-item');
 navItems.forEach(item => {
-item.addEventListener('click', function() {
-navItems.forEach(nav => nav.classList.remove('active'));
-this.classList.add('active');
+  item.addEventListener('click', function() {
+    navItems.forEach(nav => nav.classList.remove('active'));
+    this.classList.add('active');
 
-const label = this.querySelector('.nav-label').innerText;
-const homeContent = document.getElementById('home-content');
-const turniSection = document.getElementById('turni-section');
-const impostazioniSection = document.getElementById('impostazioni-section');
+    const label = this.querySelector('.nav-label').innerText;
+    const homeContent = document.getElementById('home-content');
+    const turniSection = document.getElementById('turni-section');
+    const impostazioniSection = document.getElementById('impostazioni-section');
 
-if (homeContent) homeContent.style.display = 'none';
-if (turniSection) turniSection.style.display = 'none';
-if (impostazioniSection) impostazioniSection.style.display = 'none';
+    if (homeContent) homeContent.style.display = 'none';
+    if (turniSection) turniSection.style.display = 'none';
+    if (impostazioniSection) impostazioniSection.style.display = 'none';
 
-if (label === 'TURNI') {
-if (turniSection) turniSection.style.display = 'block';
-loadTurni();
-} else if (label === 'HOME') {
-if (homeContent) homeContent.style.display = 'block';
-loadEvents();
-} else if (label === 'IMPOSTAZIONI') {
-if (impostazioniSection) impostazioniSection.style.display = 'block';
-}
-});
+    if (label === 'TURNI') {
+      if (turniSection) turniSection.style.display = 'block';
+      loadTurni();
+    } else if (label === 'HOME') {
+      if (homeContent) homeContent.style.display = 'block';
+      loadEvents();
+    } else if (label === 'IMPOSTAZIONI') {
+      if (impostazioniSection) impostazioniSection.style.display = 'block';
+    }
+  });
 });
 
 // --- 4. CARICAMENTO EVENTI DA CSV ---
 async function loadEvents() {
-const eventsList = document.getElementById('events-list');
-const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1586015555751-63bb77f4322a?q=80&w=1000&auto=format&fit=crop';
+  const eventsList = document.getElementById('events-list');
+  const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1586015555751-63bb77f4322a?q=80&w=1000&auto=format&fit=crop';
 
-try {
-const response = await fetch(SHEET_EVENTI_CSV);
-const csvText = await response.text();
-const data = csvToObjects(csvText);
+  try {
+    const response = await fetch(SHEET_EVENTI_CSV);
+    const csvText = await response.text();
+    const data = csvToObjects(csvText);
 
-eventsList.innerHTML = '';
+    eventsList.innerHTML = '';
 
-if (!data || data.length === 0) {
-eventsList.innerHTML = '<div class="event-card"><div class="event-info">Nessun evento in programma.</div></div>';
-return;
-}
+    if (!data || data.length === 0) {
+      eventsList.innerHTML = '<div class="event-card"><div class="event-info">Nessun evento in programma.</div></div>';
+      return;
+    }
 
-data.forEach(event => {
-const imgUrl = (event.immagine && event.immagine.trim() !== "") ? event.immagine : DEFAULT_IMAGE;
-eventsList.innerHTML += `
-<div class="event-card">
-<img src="${imgUrl}" class="event-image" alt="${event.titolo || 'Evento'}" onerror="this.src='${DEFAULT_IMAGE}';">
-<div class="event-info">
-<span class="event-date">${event.data || 'Prossimamente'}</span>
-<h4 class="event-title">${event.titolo || 'Nuovo Evento'}</h4>
-</div>
-</div>`;
-});
-} catch (error) {
-console.error("Errore caricamento eventi CSV:", error);
-eventsList.innerHTML = '<div class="event-card"><div class="event-info">Errore di caricamento.</div></div>';
-}
+    data.forEach(event => {
+      const imgUrl = (event.immagine && event.immagine.trim() !== "") ? event.immagine : DEFAULT_IMAGE;
+      eventsList.innerHTML += `
+      <div class="event-card">
+        <img src="${imgUrl}" class="event-image" alt="${event.titolo || 'Evento'}" onerror="this.src='${DEFAULT_IMAGE}';">
+        <div class="event-info">
+          <span class="event-date">${event.data || 'Prossimamente'}</span>
+          <h4 class="event-title">${event.titolo || 'Nuovo Evento'}</h4>
+        </div>
+      </div>`;
+    });
+  } catch (error) {
+    console.error("Errore caricamento eventi CSV:", error);
+    eventsList.innerHTML = '<div class="event-card"><div class="event-info">Errore di caricamento.</div></div>';
+  }
 }
 
 // --- 5. CARICAMENTO TURNI DA CSV ---
 async function loadTurni() {
-const today = new Date();
-today.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-try {
-const response = await fetch(SHEET_TURNI_CSV);
-const csvText = await response.text();
-const data = csvToObjects(csvText);
+  try {
+    const response = await fetch(SHEET_TURNI_CSV);
+    const csvText = await response.text();
+    const data = csvToObjects(csvText);
 
-const containerAttuale = document.getElementById('img-turno-attuale');
-const listaAltri = document.getElementById('lista-altri-turni');
-if (listaAltri) listaAltri.innerHTML = '';
+    const containerAttuale = document.getElementById('img-turno-attuale');
+    const listaAltri = document.getElementById('lista-altri-turni');
+    if (listaAltri) listaAltri.innerHTML = '';
 
-let trovato = false;
+    let trovato = false;
 
-data.forEach((turno, index) => {
-if (!turno.inizio) return;
-const inizio = new Date(turno.inizio);
-let fine;
-if (turno.fine) {
-fine = new Date(turno.fine);
-fine.setHours(23, 59, 59, 999);
-} else {
-fine = new Date(inizio);
-fine.setDate(fine.getDate() + 7);
-}
+    data.forEach((turno, index) => {
+      if (!turno.inizio) return;
+      const inizio = new Date(turno.inizio);
+      let fine;
+      if (turno.fine) {
+        fine = new Date(turno.fine);
+        fine.setHours(23, 59, 59, 999);
+      } else {
+        fine = new Date(inizio);
+        fine.setDate(fine.getDate() + 7);
+      }
 
-if (today >= inizio && today <= fine) {
-trovato = true;
-if (containerAttuale && turno.immagine) {
-containerAttuale.src = turno.immagine;
-}
-if (data[index - 1] && data[index - 1].immagine) {
-aggiungiMiniatura(data[index - 1], "Sett. Precedente");
-}
-if (data[index + 1] && data[index + 1].immagine) {
-aggiungiMiniatura(data[index + 1], "Sett. Successiva");
-}
-}
-});
+      if (today >= inizio && today <= fine) {
+        trovato = true;
+        if (containerAttuale && turno.immagine) {
+          containerAttuale.src = turno.immagine;
+        }
+        if (data[index - 1] && data[index - 1].immagine) {
+          aggiungiMiniatura(data[index - 1], "Sett. Precedente");
+        }
+        if (data[index + 1] && data[index + 1].immagine) {
+          aggiungiMiniatura(data[index + 1], "Sett. Successiva");
+        }
+      }
+    });
 
-// Fallback: mostra la prima immagine disponibile se nessuna data coincide esattamente
-if (!trovato && data.length > 0) {
-const primoConImmagine = data.find(t => t.immagine && t.immagine.trim() !== "");
-if (primoConImmagine && containerAttuale) {
-containerAttuale.src = primoConImmagine.immagine;
-}
-}
-} catch (e) {
-console.error("Errore caricamento turni CSV:", e);
-}
+    if (!trovato && data.length > 0) {
+      const primoConImmagine = data.find(t => t.immagine && t.immagine.trim() !== "");
+      if (primoConImmagine && containerAttuale) {
+        containerAttuale.src = primoConImmagine.immagine;
+      }
+    }
+  } catch (e) {
+    console.error("Errore caricamento turni CSV:", e);
+  }
 }
 
 function aggiungiMiniatura(turno, label) {
-const div = document.createElement('div');
-div.className = 'event-card';
-div.style.flex = '0 0 140px';
-div.innerHTML = `
-<img src="${turno.immagine}" class="event-image" style="height:100px; object-fit: cover;">
-<div class="event-info"><span class="event-date">${label}</span></div>`;
-div.onclick = () => aprireZoom(turno.immagine);
-document.getElementById('lista-altri-turni').appendChild(div);
+  const div = document.createElement('div');
+  div.className = 'event-card';
+  div.style.flex = '0 0 140px';
+  div.innerHTML = `
+  <img src="${turno.immagine}" class="event-image" style="height:100px; object-fit: cover;">
+  <div class="event-info"><span class="event-date">${label}</span></div>`;
+  div.onclick = () => aprireZoom(turno.immagine);
+  document.getElementById('lista-altri-turni').appendChild(div);
 }
 
 // --- 6. ZOOM IMMAGINI ---
 const modal = document.getElementById("zoom-modal");
 const imgZoomato = document.getElementById("img-zoomato");
 
-document.getElementById('img-turno-attuale').onclick = function() { aprireZoom(this.src); };
-
-function aprireZoom(src) {
-if(!src) return;
-modal.style.display = "block";
-imgZoomato.src = src;
+const turnoImg = document.getElementById('img-turno-attuale');
+if (turnoImg) {
+  turnoImg.onclick = function() { aprireZoom(this.src); };
 }
 
-document.querySelector(".close-modal").onclick = () => modal.style.display = "none";
-window.onclick = (event) => { if (event.target == modal) modal.style.display = "none"; };
+function aprireZoom(src) {
+  if (!src || !modal || !imgZoomato) return;
+  modal.style.display = "block";
+  imgZoomato.src = src;
+}
+
+const closeBtn = document.querySelector(".close-modal");
+if (closeBtn) {
+  closeBtn.onclick = () => {
+    if (modal) modal.style.display = "none";
+  };
+}
+
+window.onclick = (event) => {
+  if (modal && event.target == modal) modal.style.display = "none";
+};
 
 // --- 7. CARICAMENTO CONFIGURAZIONE VOLANTINO DA CSV ---
 async function caricaConfigurazioneApp() {
@@ -400,9 +431,5 @@ async function caricaConfigurazioneApp() {
 loadEvents();
 caricaConfigurazioneApp();
 </script>
-  <div id="zoom-modal" class="modal">
-  <span class="close-modal">&times;</span>
-  <img class="modal-content" id="img-zoomato" alt="Ingrandimento Turno">
-</div>
 </body>
 </html>
