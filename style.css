@@ -331,3 +331,30 @@ body {
     font-weight: bold;
     cursor: pointer;
 }
+
+/* --- BANNER OFFERTE DEL MESE --- */
+.promo-month-section {
+    margin: 0 20px 30px 20px; /* Si allinea perfettamente con le altre sezioni */
+}
+
+.promo-banner-link {
+    display: block;
+    text-decoration: none;
+    border-radius: 18px; /* Stesso raggio delle altre card */
+    overflow: hidden; /* Taglia l'immagine in modo che segua i bordi arrotondati */
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08); /* Ombra coerente con il resto dell'app */
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    border: 1px solid var(--border-color);
+}
+
+.promo-banner-link:active {
+    transform: scale(0.97); /* Effetto "click" nativo mobile */
+    opacity: 0.9;
+}
+
+.promo-banner-img {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: cover;
+}
