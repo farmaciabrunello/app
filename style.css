@@ -293,6 +293,10 @@ body {
     width: 92%;
     max-width: 900px;
     border-radius: 12px;
+    touch-action: none; /* Disabilita lo scroll nativo del contenitore per consentire il gesto pinch/pan */
+    transform-origin: center center;
+    will-change: transform;
+    transition: transform 0.05s ease-out;
 }
 
 .close-modal {
