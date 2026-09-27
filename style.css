@@ -1,10 +1,15 @@
 /* --- 1. VARIABILI E IMPOSTAZIONI DI SISTEMA --- */
+/* --- VARIABILI DI COLORE --- */
 :root {
-    --primary-green: #2e7d32;
-    --ios-grey: #8e8e93;
-    --text-dark: #333333;
-    --bg-light: #f8f9fa;
-    --header-white: rgba(255, 255, 255, 0.8);
+  --primary-green: #2e7d32;
+  --ios-grey: #8e8e93;
+  
+  /* Definisci qui i colori di fondo e testo */
+  --bg-page: #f8f9fa;
+  --bg-card: #ffffff;
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --border-color: #eeeeee;
 }
 
 * {
@@ -16,8 +21,8 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: var(--bg-light);
-    color: var(--text-dark);
+    background-color: var(--bg-page);
+    color: var(--text-primary);
     display: flex;
     flex-direction: column;
     height: 100vh;
@@ -129,13 +134,13 @@ body {
 .event-card {
     flex: 0 0 82%; /* Larghezza card: l'utente vede un pezzo della successiva */
     scroll-snap-align: center;
-    background: white;
+    background-color: var(--bg-card);
     border-radius: 18px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.08);
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    border: 1px solid #eee;
+    border: 1px solid var(--border-color);
 }
 
 .event-image {
