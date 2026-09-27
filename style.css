@@ -134,7 +134,7 @@ body {
 
 /* Card dell'evento */
 .event-card {
-    flex: 0 0 82%; /* Larghezza card: l'utente vede un pezzo della successiva */
+    flex: 0 0 75%; /* Larghezza ideale per evidenziare il formato verticale 4:5 */
     scroll-snap-align: center;
     background-color: var(--bg-card);
     border-radius: 18px;
@@ -145,10 +145,12 @@ body {
     border: 1px solid var(--border-color);
 }
 
+/* Immagine dell'evento in formato Instagram 4:5 */
 .event-image {
     width: 100%;
-    height: 150px;
-    object-fit: cover;
+    aspect-ratio: 4 / 5; /* Rapporto d'aspetto fisso 4:5 (verticale) */
+    object-fit: cover;   /* Centra e adatta senza distorcere l'immagine */
+    display: block;
 }
 
 .event-info {
