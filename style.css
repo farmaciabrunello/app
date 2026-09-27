@@ -134,11 +134,11 @@ body {
 
 /* Card dell'evento */
 .event-card {
-    flex: 0 0 75%; /* Larghezza ideale per evidenziare il formato verticale 4:5 */
+    flex: 0 0 60%; /* Ridotto al 60% per card più compatte ed eleganti */
     scroll-snap-align: center;
     background-color: var(--bg-card);
-    border-radius: 18px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     overflow: hidden;
     display: flex;
     flex-direction: column;
