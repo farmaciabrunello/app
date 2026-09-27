@@ -350,3 +350,28 @@ body {
     display: block;
     object-fit: cover;
 }
+
+/* --- SEZIONE SERVIZI (IMMAGINI RETTANGOLARI CLASSICHE) --- */
+.services-section {
+    margin-bottom: 35px;
+    overflow: hidden;
+}
+
+.service-card {
+    flex: 0 0 75%; /* Card rettangolare più ampia per le immagini orizzontali */
+    scroll-snap-align: center;
+    background-color: var(--bg-card);
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border-color);
+}
+
+.service-image {
+    width: 100%;
+    height: 150px; /* Formato rettangolare classico come la vecchia sezione eventi */
+    object-fit: cover;
+    display: block;
+}
