@@ -348,5 +348,30 @@ window.onclick = (event) => { if (event.target == modal) modal.style.display = "
 loadEvents();
 </script>
 
+// Sostituisci questo URL con il link CSV del tuo foglio di calcolo
+const SHEET_VOLANTINO_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_EaTRsfUeqaRmkHSa814SNam_pdpyybRgeM2VtbOsbsXfv_7WhSx469O_eSVEI8Xv01xDdEXzLRzM/pubhtml";
+
+async function aggiornaLinkVolantino() {
+  try {
+    const response = await fetch(SHEET_VOLANTINO_CSV);
+    const dataText = await response.text();
+    
+    // Prende il contenuto della prima riga/cella del foglio
+    const linkVolantino = dataText.trim().split('\n')[0].replace(/"/g, '');
+
+    if (linkVolantino && linkVolantino.startsWith('http')) {
+      const bannerLink = document.getElementById('promo-link');
+      if (bannerLink) {
+        bannerLink.href = linkVolantino;
+      }
+    }
+  } catch (error) {
+    console.error("Errore durante il caricamento del volantino:", error);
+  }
+}
+
+// Esegui la funzione al caricamento della pagina
+document.addEventListener('DOMContentLoaded', aggiornaLinkVolantino);
+  
 </body>
 </html>
