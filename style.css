@@ -232,7 +232,7 @@ body {
 .icon-wrapper svg {
     width: 32px;
     height: 32px;
-    transform: scale(1.15);
+    transform: scale(1.35);
     color: var(--text-primary) !important;
 }
 
