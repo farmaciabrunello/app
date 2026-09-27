@@ -299,26 +299,24 @@ body {
     transition: transform 0.05s ease-out;
 }
 
-/* Tasto Chiudi (X) ottimizzato per evitare ghosting su iOS */
+/* Tasto Chiudi (X) pulito - risolve il bug grafico di iOS */
 .close-modal {
-    position: absolute; /* Cambiato da fixed ad absolute per eliminare l'artefatto visivo su iOS */
+    position: absolute;
     top: calc(env(safe-area-inset-top) + 15px);
     right: 20px;
     color: #ffffff;
-    font-size: 36px;
+    font-size: 32px;
     font-weight: bold;
     cursor: pointer;
     z-index: 100000;
-    background: rgba(255, 255, 255, 0.2);
-    width: 44px;
-    height: 44px;
+    background: rgba(0, 0, 0, 0.5); /* Sfondo scuro semitrasparente super definito */
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     line-height: 1;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
 }
 
 .close-modal:active {
