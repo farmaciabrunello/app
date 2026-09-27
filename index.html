@@ -44,7 +44,7 @@ notifyButton: { enable: true },
 <a href="https://wa.me/390422491591" class="header-btn" target="_blank">
 <div class="icon-wrapper">
 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-<path fill="currentColor" d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.185-.573c.948.517 2.011.888 3.146.889h.001c3.182 0 5.767-2.587 5.768-5.766 0-3.18-2.586-5.765-5.769-5.765zm3.425 8.311c-.14.397-.714.726-1.12.776-.364.045-.838.077-2.396-.548-1.992-.799-3.273-2.822-3.372-2.955-.1-.133-.815-1.082-.815-2.064s.508-1.467.689-1.666c.181-.199.395-.249.526-.249s.263.003.378.009c.124.006.29-.047.454.346.164.397.562 1.37.611 1.47.049.1.082.215.017.348-.066.133-.099.215-.198.331-.099.115-.208.258-.296.353-.099.108-.202.226-.087.424.115.197.511.844 1.093 1.362.749.667 1.381.874 1.578.973.197.1.312.083.427-.049.115-.133.493-.573.624-.769.131-.197.263-.166.444-.1s1.15.542 1.347.641c.197.1.329.15.378.233.05.083.05.481-.09.878z"/>
+<path fill="currentColor" d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.185-.573c.948.517 2.011.888 3.146.889h.001c3.182 0 5.767-2.587 5.768-5.766 0-3.18-2.586-5.765-5.769-5.765zm3.425 8.311c-.14.397-.714.726-1.12.776-.364.045-.838.077-2.396-.548-1.992-.799-3.273-2.822-3.372-2.955-.1-.133-.815-1.082-.815-2.064s.508-1.467.689-1.666c.181-.199.395-.249.526-.249s.263.003.378.009c.124.006.29-.047.454.346.164.397.562 1.37.611 1.47.049.1.082.215.017.348-.066.133-.099.215-.198.331-.099.115-.208.258-.296.353-.099.108-.202.226-.087.424.115.197.511.844 1.093 1.362.749.667 1.381.874 1.578.973.197.1.329.15.378.233.05.083.05.481-.09.878z"/>
 </svg>
 </div>
 <span class="header-btn-label">WHATSAPP</span>
@@ -78,7 +78,7 @@ notifyButton: { enable: true },
     <img src="assets/images/LeOfferteDelMese.webp" alt="Le Offerte del Mese - Scarica il Volantino" class="promo-banner-img">
   </a>
 </section>
-  
+
 <section class="events-section">
 <div class="section-header">
 <h2>Prossimi Eventi</h2>
@@ -151,16 +151,38 @@ notifyButton: { enable: true },
 </footer>
 
 <script>
-// 1. Logica OneSignal con ascolto dinamico dello stato
+// --- 1. CONFIGURAZIONE LINK GOOGLE SHEETS (CSV) ---
+const SHEET_CONFIG_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_EaTRsfUeqaRmkHSa814SNam_pdpyybRgeM2VtbOsbsXfv_7WhSx469O_eSVEI8Xv01xDdEXzLRzM/pub?gid=0&single=true&output=csv";
+const SHEET_EVENTI_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_EaTRsfUeqaRmkHSa814SNam_pdpyybRgeM2VtbOsbsXfv_7WhSx469O_eSVEI8Xv01xDdEXzLRzM/pub?gid=1635755565&single=true&output=csv";
+const SHEET_TURNI_CSV  = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_EaTRsfUeqaRmkHSa814SNam_pdpyybRgeM2VtbOsbsXfv_7WhSx469O_eSVEI8Xv01xDdEXzLRzM/pub?gid=2033273365&single=true&output=csv";
+
+// Funzione helper per convertire il formato CSV di Google Sheets in Array di Oggetti
+function csvToObjects(csvText) {
+  const lines = csvText.trim().split(/\r?\n/);
+  if (lines.length < 2) return [];
+  
+  const headers = lines[0].split(/[,;]/).map(h => h.replace(/^"|"$/g, '').trim().toLowerCase());
+  
+  return lines.slice(1).map(line => {
+    if (!line.trim()) return null;
+    const values = line.match(/(".*?"|[^",;]+)(?=\s*[,;]|\s*$)/g) || line.split(/[,;]/);
+    const obj = {};
+    headers.forEach((header, index) => {
+      let val = values[index] ? values[index].replace(/^"|"$/g, '').trim() : '';
+      obj[header] = val;
+    });
+    return obj;
+  }).filter(Boolean);
+}
+
+// --- 2. LOGICA ONESIGNAL ---
 window.OneSignalDeferred = window.OneSignalDeferred || [];
 
-// Funzione principale di aggiornamento pulsanti
 async function updateButtons() {
 OneSignalDeferred.push(async function(OneSignal) {
 try {
 const isOptedIn = OneSignal.User.PushSubscription.optedIn;
 const permission = OneSignal.Notifications.permission;
-console.log("Stato di iscrizione:", isOptedIn, "| Permesso browser:", permission);
 
 const homePanel = document.getElementById('home-notification-panel');
 const settingsStatus = document.getElementById('settings-loading-status');
@@ -187,7 +209,6 @@ console.error("Errore lettura stato OneSignal:", err);
 OneSignalDeferred.push(function(OneSignal) {
 updateButtons();
 OneSignal.User.PushSubscription.addEventListener("change", function(event) {
-console.log("Evento cambio iscrizione intercettato:", event);
 updateButtons();
 });
 });
@@ -215,7 +236,7 @@ console.error("Errore durante optOut:", err);
 });
 }
 
-// 2. Navigazione tra sezioni
+// --- 3. NAVIGAZIONE ---
 const navItems = document.querySelectorAll('.nav-item');
 navItems.forEach(item => {
 item.addEventListener('click', function() {
@@ -243,15 +264,16 @@ if (impostazioniSection) impostazioniSection.style.display = 'block';
 });
 });
 
-// 3. Caricamento Eventi
+// --- 4. CARICAMENTO EVENTI DA CSV ---
 async function loadEvents() {
 const eventsList = document.getElementById('events-list');
-const API_URL = 'https://sheetdb.io/api/v1/mcvst24hmpts3?sheet=Eventi';
 const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1586015555751-63bb77f4322a?q=80&w=1000&auto=format&fit=crop';
 
 try {
-const response = await fetch(API_URL);
-const data = await response.json();
+const response = await fetch(SHEET_EVENTI_CSV);
+const csvText = await response.text();
+const data = csvToObjects(csvText);
+
 eventsList.innerHTML = '';
 
 if (!data || data.length === 0) {
@@ -263,7 +285,7 @@ data.forEach(event => {
 const imgUrl = (event.immagine && event.immagine.trim() !== "") ? event.immagine : DEFAULT_IMAGE;
 eventsList.innerHTML += `
 <div class="event-card">
-<img src="${imgUrl}" class="event-image" alt="${event.titolo}" onerror="this.src='${DEFAULT_IMAGE}';">
+<img src="${imgUrl}" class="event-image" alt="${event.titolo || 'Evento'}" onerror="this.src='${DEFAULT_IMAGE}';">
 <div class="event-info">
 <span class="event-date">${event.data || 'Prossimamente'}</span>
 <h4 class="event-title">${event.titolo || 'Nuovo Evento'}</h4>
@@ -271,31 +293,63 @@ eventsList.innerHTML += `
 </div>`;
 });
 } catch (error) {
+console.error("Errore caricamento eventi CSV:", error);
 eventsList.innerHTML = '<div class="event-card"><div class="event-info">Errore di caricamento.</div></div>';
 }
 }
 
-// 4. Caricamento Turni
+// --- 5. CARICAMENTO TURNI DA CSV ---
 async function loadTurni() {
-const API_URL_TURNI = 'https://sheetdb.io/api/v1/mcvst24hmpts3?sheet=Turni';
 const today = new Date();
+today.setHours(0, 0, 0, 0);
+
 try {
-const response = await fetch(API_URL_TURNI);
-const data = await response.json();
+const response = await fetch(SHEET_TURNI_CSV);
+const csvText = await response.text();
+const data = csvToObjects(csvText);
+
 const containerAttuale = document.getElementById('img-turno-attuale');
 const listaAltri = document.getElementById('lista-altri-turni');
-listaAltri.innerHTML = '';
+if (listaAltri) listaAltri.innerHTML = '';
+
+let trovato = false;
 
 data.forEach((turno, index) => {
+if (!turno.inizio) return;
 const inizio = new Date(turno.inizio);
-const fine = new Date(turno.fine);
-if (today >= inizio && today < fine) {
+let fine;
+if (turno.fine) {
+fine = new Date(turno.fine);
+fine.setHours(23, 59, 59, 999);
+} else {
+fine = new Date(inizio);
+fine.setDate(fine.getDate() + 7);
+}
+
+if (today >= inizio && today <= fine) {
+trovato = true;
+if (containerAttuale && turno.immagine) {
 containerAttuale.src = turno.immagine;
-if(data[index-1]) aggiungiMiniatura(data[index-1], "Sett. Precedente");
-if(data[index+1]) aggiungiMiniatura(data[index+1], "Sett. Successiva");
+}
+if (data[index - 1] && data[index - 1].immagine) {
+aggiungiMiniatura(data[index - 1], "Sett. Precedente");
+}
+if (data[index + 1] && data[index + 1].immagine) {
+aggiungiMiniatura(data[index + 1], "Sett. Successiva");
+}
 }
 });
-} catch (e) { console.error("Errore turni", e); }
+
+// Fallback: mostra la prima immagine disponibile se nessuna data coincide esattamente
+if (!trovato && data.length > 0) {
+const primoConImmagine = data.find(t => t.immagine && t.immagine.trim() !== "");
+if (primoConImmagine && containerAttuale) {
+containerAttuale.src = primoConImmagine.immagine;
+}
+}
+} catch (e) {
+console.error("Errore caricamento turni CSV:", e);
+}
 }
 
 function aggiungiMiniatura(turno, label) {
@@ -309,7 +363,7 @@ div.onclick = () => aprireZoom(turno.immagine);
 document.getElementById('lista-altri-turni').appendChild(div);
 }
 
-// 5. Zoom Immagini
+// --- 6. ZOOM IMMAGINI ---
 const modal = document.getElementById("zoom-modal");
 const imgZoomato = document.getElementById("img-zoomato");
 
@@ -324,9 +378,7 @@ imgZoomato.src = src;
 document.querySelector(".close-modal").onclick = () => modal.style.display = "none";
 window.onclick = (event) => { if (event.target == modal) modal.style.display = "none"; };
 
-// 6. Caricamento Dinamico Volantino da Google Sheets
-const SHEET_CONFIG_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_EaTRsfUeqaRmkHSa814SNam_pdpyybRgeM2VtbOsbsXfv_7WhSx469O_eSVEI8Xv01xDdEXzLRzM/pub?gid=0&single=true&output=csv";
-
+// --- 7. CARICAMENTO CONFIGURAZIONE VOLANTINO DA CSV ---
 async function caricaConfigurazioneApp() {
   try {
     const response = await fetch(SHEET_CONFIG_CSV);
