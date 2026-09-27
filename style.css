@@ -303,35 +303,55 @@ body {
     cursor: zoom-in;
 }
 
-/* Modal per lo Zoom */
+/* Modal per lo Zoom (A tutto schermo sopra l'header) */
 .modal {
     display: none;
     position: fixed;
-    z-index: 2000;
-    padding-top: 50px;
-    left: 0;
+    z-index: 99999; /* Priorità massima per stare sopra a header e navigazione */
     top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.9);
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.95);
     overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-top: calc(env(safe-area-inset-top) + 60px); /* Spazio per la fotocamera/notch iPhone */
+    padding-bottom: env(safe-area-inset-bottom);
 }
 
 .modal-content {
     margin: auto;
     display: block;
-    width: 95%;
-    max-width: 1000px;
+    width: 92%;
+    max-width: 900px;
+    border-radius: 12px;
 }
 
+/* Tasto Chiudi (X) ottimizzato per iOS */
 .close-modal {
-    position: absolute;
-    top: 20px;
-    right: 35px;
-    color: white;
-    font-size: 40px;
+    position: fixed;
+    top: calc(env(safe-area-inset-top) + 15px); /* Si adatta alla barra di stato di iOS */
+    right: 20px;
+    color: #ffffff;
+    font-size: 36px;
     font-weight: bold;
     cursor: pointer;
+    z-index: 100000;
+    background: rgba(255, 255, 255, 0.2); /* Sfondo semi-trasparente per renderlo facilissimo da toccare */
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.close-modal:active {
+    transform: scale(0.9);
+    background: rgba(255, 255, 255, 0.4);
 }
 
 /* --- BANNER OFFERTE DEL MESE --- */
