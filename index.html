@@ -310,18 +310,17 @@ async function loadEvents() {
       eventsList.innerHTML = '<div class="event-card"><div class="event-info">Nessun evento in programma.</div></div>';
       return;
     }
-
-    data.forEach(event => {
-      const imgUrl = (event.immagine && event.immagine.trim() !== "") ? event.immagine : DEFAULT_IMAGE;
-      eventsList.innerHTML += `
-      <div class="event-card">
-        <img src="${imgUrl}" class="event-image" alt="${event.titolo || 'Evento'}" onerror="this.src='${DEFAULT_IMAGE}';">
-        <div class="event-info">
-          <span class="event-date">${event.data || 'Prossimamente'}</span>
-          <h4 class="event-title">${event.titolo || 'Nuovo Evento'}</h4>
-        </div>
-      </div>`;
-    });
+data.forEach(event => {
+  const imgUrl = (event.immagine && event.immagine.trim() !== "") ? event.immagine : DEFAULT_IMAGE;
+  eventsList.innerHTML += `
+  <div class="event-card">
+    <img src="${imgUrl}" class="event-image" alt="${event.titolo || 'Evento'}">
+    <div class="event-info">
+      <span class="event-date">${event.data || 'Prossimamente'}</span>
+      <h4 class="event-title">${event.titolo || 'Nuovo Evento'}</h4>
+    </div>
+  </div>`;
+});
   } catch (error) {
     console.error("Errore caricamento eventi CSV:", error);
     eventsList.innerHTML = '<div class="event-card"><div class="event-info">Errore di caricamento.</div></div>';
@@ -344,19 +343,19 @@ async function loadServices() {
       servicesList.innerHTML = '<div class="service-card"><div class="event-info">Nessun servizio disponibile.</div></div>';
       return;
     }
-
-    data.forEach(service => {
-      const imgUrl = (service.immagine && service.immagine.trim() !== "") ? service.immagine : DEFAULT_IMAGE;
-      const sottotitolo = service.descrizione || service.data || 'Servizio in farmacia';
-      servicesList.innerHTML += `
-      <div class="service-card">
-        <img src="${imgUrl}" class="service-image" alt="${service.titolo || 'Servizio'}" onerror="this.src='${DEFAULT_IMAGE}';">
-        <div class="event-info">
-          <span class="event-date">${sottotitolo}</span>
-          <h4 class="event-title">${service.titolo || 'Nuovo Servizio'}</h4>
-        </div>
-      </div>`;
-    });
+    
+data.forEach(service => {
+  const imgUrl = (service.immagine && service.immagine.trim() !== "") ? service.immagine : DEFAULT_IMAGE;
+  const sottotitolo = service.descrizione || service.data || 'Servizio in farmacia';
+  servicesList.innerHTML += `
+  <div class="service-card">
+    <img src="${imgUrl}" class="service-image" alt="${service.titolo || 'Servizio'}">
+    <div class="event-info">
+      <span class="event-date">${sottotitolo}</span>
+      <h4 class="event-title">${service.titolo || 'Nuovo Servizio'}</h4>
+    </div>
+  </div>`;
+});
   } catch (error) {
     console.error("Errore caricamento servizi CSV:", error);
     servicesList.innerHTML = '<div class="service-card"><div class="event-info">Errore di caricamento.</div></div>';
