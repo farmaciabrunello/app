@@ -348,30 +348,43 @@ window.onclick = (event) => { if (event.target == modal) modal.style.display = "
 loadEvents();
 </script>
 
-// Sostituisci questo URL con il link CSV del tuo foglio di calcolo
-const SHEET_VOLANTINO_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_EaTRsfUeqaRmkHSa814SNam_pdpyybRgeM2VtbOsbsXfv_7WhSx469O_eSVEI8Xv01xDdEXzLRzM/pubhtml";
+// Incolla qui il link CSV del tuo foglio di calcolo
+// (Assicurati che sia il CSV del Foglio1, di solito finisce con gid=0 o simile)
+const SHEET_CONFIG_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_EaTRsfUeqaRmkHSa814SNam_pdpyybRgeM2VtbOsbsXfv_7WhSx469O_eSVEI8Xv01xDdEXzLRzM/pub?gid=0&single=true&output=csv";
 
-async function aggiornaLinkVolantino() {
+async function caricaConfigurazioneApp() {
   try {
-    const response = await fetch(SHEET_VOLANTINO_CSV);
+    const response = await fetch(SHEET_CONFIG_CSV);
     const dataText = await response.text();
     
-    // Prende il contenuto della prima riga/cella del foglio
-    const linkVolantino = dataText.trim().split('\n')[0].replace(/"/g, '');
+    // Dividiamo il foglio in righe
+    const righe = dataText.split(/\r?\n/);
+    
+    if (righe.length > 0) {
+      // Prendiamo la Riga 1
+      const primaRiga = righe[0];
+      
+      // Separiamo la riga nelle sue colonne A, B, C... (gestisce sia virgole che punti e virgola)
+      const colonne = primaRiga.split(/[,;]/);
+      
+      // Cella B1 = Indice 1 (A1 è l'indice 0, B1 è l'indice 1)
+      const linkVolantino = colonne[1] ? colonne[1].replace(/"/g, '').trim() : '';
 
-    if (linkVolantino && linkVolantino.startsWith('http')) {
-      const bannerLink = document.getElementById('promo-link');
-      if (bannerLink) {
-        bannerLink.href = linkVolantino;
+      // Se la cella B1 contiene un link valido, aggiorniamo il banner
+      if (linkVolantino && linkVolantino.startsWith('http')) {
+        const bannerLink = document.getElementById('promo-link');
+        if (bannerLink) {
+          bannerLink.href = linkVolantino;
+        }
       }
     }
   } catch (error) {
-    console.error("Errore durante il caricamento del volantino:", error);
+    console.error("Errore durante il caricamento della configurazione:", error);
   }
 }
 
-// Esegui la funzione al caricamento della pagina
-document.addEventListener('DOMContentLoaded', aggiornaLinkVolantino);
+// Avvia il caricamento quando la pagina è pronta
+document.addEventListener('DOMContentLoaded', caricaConfigurazioneApp);
   
 </body>
 </html>
