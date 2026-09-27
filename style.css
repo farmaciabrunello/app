@@ -1,5 +1,4 @@
 /* --- 1. VARIABILI E IMPOSTAZIONI DI SISTEMA --- */
-/* --- VARIABILI DI COLORE --- */
 :root {
   --primary-green: #2e7d32;
   --ios-grey: #8e8e93;
@@ -56,35 +55,15 @@ body {
     width: auto;
 }
 
-.nav-item-header {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    color: var(--text-primary);
-    text-decoration: none;
-}
-
-.nav-item-header .nav-icon {
-    font-size: 24px !important;
-    color: var(--text-primary) !important;
-}
-
-.nav-item-header .nav-label {
-    font-size: 10px;
-    font-weight: 700;
-    margin-top: 2px;
-}
-
 /* --- 3. CONTENUTO SCORREVOLE --- */
 .scrollable-content {
     flex: 1;
     overflow-y: auto;
-    padding: 20px 0; /* Rimosso padding laterale per permettere lo scroll a filo */
+    padding: 20px 0;
     -webkit-overflow-scrolling: touch;
     padding-bottom: calc(env(safe-area-inset-bottom) + 100px);
 }
 
-/* Padding interno per le sezioni che non devono essere a filo */
 .notification-panel, .section-header {
     margin-left: 20px;
     margin-right: 20px;
@@ -111,18 +90,11 @@ body {
     letter-spacing: 0.5px;
 }
 
-.view-all {
-    color: var(--primary-green);
-    font-size: 0.9rem;
-    font-weight: 600;
-}
-
-/* Container per lo scorrimento orizzontale */
 .events-container {
     display: flex;
     overflow-x: auto;
-    scroll-snap-type: x mandatory; /* Effetto calamita */
-    padding: 10px 20px; /* Padding laterale per vedere la card successiva */
+    scroll-snap-type: x mandatory;
+    padding: 10px 20px;
     gap: 15px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
@@ -132,9 +104,9 @@ body {
     display: none;
 }
 
-/* Card dell'evento */
+/* Card dell'evento (Dimensioni compatte) */
 .event-card {
-    flex: 0 0 60%; /* Ridotto al 60% per card più compatte ed eleganti */
+    flex: 0 0 60%; /* Card leggermente più piccola e ben proporzionata */
     scroll-snap-align: center;
     background-color: var(--bg-card);
     border-radius: 16px;
@@ -148,13 +120,13 @@ body {
 /* Immagine dell'evento in formato Instagram 4:5 */
 .event-image {
     width: 100%;
-    aspect-ratio: 4 / 5; /* Rapporto d'aspetto fisso 4:5 (verticale) */
-    object-fit: cover;   /* Centra e adatta senza distorcere l'immagine */
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
     display: block;
 }
 
 .event-info {
-    padding: 15px;
+    padding: 12px 14px;
 }
 
 .event-date {
@@ -167,7 +139,7 @@ body {
 }
 
 .event-title {
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 700;
     color: var(--text-primary);
     margin: 0;
@@ -229,7 +201,7 @@ body {
 .btn-subscribe { background: var(--primary-green); color: white; }
 .btn-unsubscribe { background: #ff3b30; color: white; }
 
-/* --- HEADER ICONS: DESIGN MODERNO --- */
+/* --- HEADER ICONS --- */
 .header-icons {
     display: flex;
     align-items: center;
@@ -257,7 +229,6 @@ body {
     color: var(--text-primary) !important;
 }
 
-/* Stile per l'icona WhatsApp (SVG) */
 .icon-wrapper svg {
     width: 32px;
     height: 32px;
@@ -265,7 +236,6 @@ body {
     color: var(--text-primary) !important;
 }
 
-/* Stile per l'icona Chiama (Material) */
 .icon-wrapper .material-symbols-outlined {
     font-size: 26px !important;
     display: block;
@@ -281,13 +251,12 @@ body {
     color: var(--text-primary) !important;
 }
 
-/* Effetto al tocco */
 .header-btn:active {
     transform: scale(0.95);
     opacity: 0.7;
 }
 
-/* --- 7. TURNI: GESTIONE IMMAGINI A4 E ZOOM --- */
+/* --- 7. TURNI: ZOOM IMMAGINI ED ELEMENTI MODAL (OTTIMIZZATO PER IOS) --- */
 .shift-card-main {
     width: 100%;
     background: white;
@@ -303,11 +272,10 @@ body {
     cursor: zoom-in;
 }
 
-/* Modal per lo Zoom (A tutto schermo sopra l'header) */
 .modal {
     display: none;
     position: fixed;
-    z-index: 99999; /* Priorità massima per stare sopra a header e navigazione */
+    z-index: 99999;
     top: 0;
     left: 0;
     width: 100vw;
@@ -315,7 +283,7 @@ body {
     background-color: rgba(0, 0, 0, 0.95);
     overflow: auto;
     -webkit-overflow-scrolling: touch;
-    padding-top: calc(env(safe-area-inset-top) + 60px); /* Spazio per la fotocamera/notch iPhone */
+    padding-top: calc(env(safe-area-inset-top) + 60px);
     padding-bottom: env(safe-area-inset-bottom);
 }
 
@@ -327,17 +295,16 @@ body {
     border-radius: 12px;
 }
 
-/* Tasto Chiudi (X) ottimizzato per iOS */
 .close-modal {
     position: fixed;
-    top: calc(env(safe-area-inset-top) + 15px); /* Si adatta alla barra di stato di iOS */
+    top: calc(env(safe-area-inset-top) + 15px);
     right: 20px;
     color: #ffffff;
     font-size: 36px;
     font-weight: bold;
     cursor: pointer;
     z-index: 100000;
-    background: rgba(255, 255, 255, 0.2); /* Sfondo semi-trasparente per renderlo facilissimo da toccare */
+    background: rgba(255, 255, 255, 0.2);
     width: 44px;
     height: 44px;
     border-radius: 50%;
@@ -356,21 +323,21 @@ body {
 
 /* --- BANNER OFFERTE DEL MESE --- */
 .promo-month-section {
-    margin: 0 20px 30px 20px; /* Si allinea perfettamente con le altre sezioni */
+    margin: 0 20px 30px 20px;
 }
 
 .promo-banner-link {
     display: block;
     text-decoration: none;
-    border-radius: 18px; /* Stesso raggio delle altre card */
-    overflow: hidden; /* Taglia l'immagine in modo che segua i bordi arrotondati */
-    box-shadow: 0 4px 15px rgba(0,0,0,0.08); /* Ombra coerente con il resto dell'app */
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
     transition: transform 0.2s ease, opacity 0.2s ease;
     border: 1px solid var(--border-color);
 }
 
 .promo-banner-link:active {
-    transform: scale(0.97); /* Effetto "click" nativo mobile */
+    transform: scale(0.97);
     opacity: 0.9;
 }
 
