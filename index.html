@@ -42,12 +42,12 @@ OneSignalDeferred.push(async function(OneSignal) {
 </div>
 <div class="header-icons">
 <a href="https://wa.me/390422491591" class="header-btn" target="_blank">
-  <div class="icon-wrapper">
-    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <path fill="currentColor" d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.185-.573c.948.517 2.011.888 3.146.889h.001c3.182 0 5.767-2.587 5.768-5.766 0-3.18-2.586-5.765-5.769-5.765zm3.425 8.311c-.14.397-.714.726-1.12.776-.364.045-.838.077-2.396-.548-1.992-.799-3.273-2.822-3.372-2.955-.1-.133-.815-1.082-.815-2.064s.508-1.467.689-1.666c.181-.199.395-.249.526-.249s.263.003.378.009c.124.006.29-.047.454.346.164.397.562 1.37.611 1.47.049.1.082.215.017.348-.066.133-.099.215-.198.331-.099.115-.208.258-.296.353-.099.108-.202.226-.087.424.115.197.511.844 1.093 1.362.749.667 1.381.874 1.578.973.197.1.312.083.427-.049.115-.133.493-.573.624-.769.131-.197.263-.166.444-.1s1.15.542 1.347.641c.197.1.329.15.378.233.05.083.05.481-.09.878z"/>
-    </svg>
-  </div>
-  <span class="header-btn-label">WHATSAPP</span>
+<div class="icon-wrapper">
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path fill="currentColor" d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.185-.573c.948.517 2.011.888 3.146.889h.001c3.182 0 5.767-2.587 5.768-5.766 0-3.18-2.586-5.765-5.769-5.765zm3.425 8.311c-.14.397-.714.726-1.12.776-.364.045-.838.077-2.396-.548-1.992-.799-3.273-2.822-3.372-2.955-.1-.133-.815-1.082-.815-2.064s.508-1.467.689-1.666c.181-.199.395-.249.526-.249s.263.003.378.009c.124.006.29-.047.454.346.164.397.562 1.37.611 1.47.049.1.082.215.017.348-.066.133-.099.215-.198.331-.099.115-.208.258-.296.353-.099.108-.202.226-.087.424.115.197.511.844 1.093 1.362.749.667 1.381.874 1.578.973.197.1.312.083.427-.049.115-.133.493-.573.624-.769.131-.197.263-.166.444-.1s1.15.542 1.347.641c.197.1.329.15.378.233.05.083.05.481-.09.878z"/>
+</svg>
+</div>
+<span class="header-btn-label">WHATSAPP</span>
 </a>
 
 <a href="tel:+390422491591" class="header-btn">
@@ -80,12 +80,23 @@ OneSignalDeferred.push(async function(OneSignal) {
   </a>
 </section>
 
+<!-- SEZIONE PROSSIMI EVENTI -->
 <section class="events-section">
 <div class="section-header">
 <h2>Prossimi Eventi</h2>
 </div>
 <div class="events-container" id="events-list">
 <div class="event-card">Caricamento eventi...</div>
+</div>
+</section>
+
+<!-- NUOVA SEZIONE I NOSTRI SERVIZI -->
+<section class="services-section">
+<div class="section-header">
+<h2>I Nostri Servizi</h2>
+</div>
+<div class="events-container" id="services-list">
+<div class="service-card">Caricamento servizi...</div>
 </div>
 </section>
 </div>
@@ -154,9 +165,10 @@ OneSignalDeferred.push(async function(OneSignal) {
 
 <script>
 // --- 1. CONFIGURAZIONE LINK GOOGLE SHEETS (CSV) ---
-const SHEET_CONFIG_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_EaTRsfUeqaRmkHSa814SNam_pdpyybRgeM2VtbOsbsXfv_7WhSx469O_eSVEI8Xv01xDdEXzLRzM/pub?gid=0&single=true&output=csv";
-const SHEET_EVENTI_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_EaTRsfUeqaRmkHSa814SNam_pdpyybRgeM2VtbOsbsXfv_7WhSx469O_eSVEI8Xv01xDdEXzLRzM/pub?gid=1635755565&single=true&output=csv";
-const SHEET_TURNI_CSV  = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_EaTRsfUeqaRmkHSa814SNam_pdpyybRgeM2VtbOsbsXfv_7WhSx469O_eSVEI8Xv01xDdEXzLRzM/pub?gid=2033273365&single=true&output=csv";
+const SHEET_CONFIG_CSV  = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_EaTRsfUeqaRmkHSa814SNam_pdpyybRgeM2VtbOsbsXfv_7WhSx469O_eSVEI8Xv01xDdEXzLRzM/pub?gid=0&single=true&output=csv";
+const SHEET_EVENTI_CSV  = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_EaTRsfUeqaRmkHSa814SNam_pdpyybRgeM2VtbOsbsXfv_7WhSx469O_eSVEI8Xv01xDdEXzLRzM/pub?gid=1635755565&single=true&output=csv";
+const SHEET_SERVIZI_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_EaTRsfUeqaRmkHSa814SNam_pdpyybRgeM2VtbOsbsXfv_7WhSx469O_eSVEI8Xv01xDdEXzLRzM/pub?gid=513108596&single=true&output=csv";
+const SHEET_TURNI_CSV   = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_EaTRsfUeqaRmkHSa814SNam_pdpyybRgeM2VtbOsbsXfv_7WhSx469O_eSVEI8Xv01xDdEXzLRzM/pub?gid=2033273365&single=true&output=csv";
 
 // Helper conversione CSV
 function csvToObjects(csvText) {
@@ -275,6 +287,7 @@ navItems.forEach(item => {
     } else if (label === 'HOME') {
       if (homeContent) homeContent.style.display = 'block';
       loadEvents();
+      loadServices();
     } else if (label === 'IMPOSTAZIONI') {
       if (impostazioniSection) impostazioniSection.style.display = 'block';
     }
@@ -315,7 +328,42 @@ async function loadEvents() {
   }
 }
 
-// --- 5. CARICAMENTO TURNI DA CSV ---
+// --- 5. CARICAMENTO SERVIZI DA CSV (IMMAGINI RETTANGOLARI) ---
+async function loadServices() {
+  const servicesList = document.getElementById('services-list');
+  const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?q=80&w=1000&auto=format&fit=crop';
+
+  try {
+    const response = await fetch(SHEET_SERVIZI_CSV);
+    const csvText = await response.text();
+    const data = csvToObjects(csvText);
+
+    servicesList.innerHTML = '';
+
+    if (!data || data.length === 0) {
+      servicesList.innerHTML = '<div class="service-card"><div class="event-info">Nessun servizio disponibile.</div></div>';
+      return;
+    }
+
+    data.forEach(service => {
+      const imgUrl = (service.immagine && service.immagine.trim() !== "") ? service.immagine : DEFAULT_IMAGE;
+      const sottotitolo = service.descrizione || service.data || 'Servizio in farmacia';
+      servicesList.innerHTML += `
+      <div class="service-card">
+        <img src="${imgUrl}" class="service-image" alt="${service.titolo || 'Servizio'}" onerror="this.src='${DEFAULT_IMAGE}';">
+        <div class="event-info">
+          <span class="event-date">${sottotitolo}</span>
+          <h4 class="event-title">${service.titolo || 'Nuovo Servizio'}</h4>
+        </div>
+      </div>`;
+    });
+  } catch (error) {
+    console.error("Errore caricamento servizi CSV:", error);
+    servicesList.innerHTML = '<div class="service-card"><div class="event-info">Errore di caricamento.</div></div>';
+  }
+}
+
+// --- 6. CARICAMENTO TURNI DA CSV ---
 async function loadTurni() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -379,7 +427,7 @@ function aggiungiMiniatura(turno, label) {
   document.getElementById('lista-altri-turni').appendChild(div);
 }
 
-// --- 6. GESTIONE ZOOM PINCH-TO-ZOOM E PAN ---
+// --- 7. GESTIONE ZOOM PINCH-TO-ZOOM E PAN ---
 const modal = document.getElementById("zoom-modal");
 const imgZoomato = document.getElementById("img-zoomato");
 const closeBtn = document.querySelector(".close-modal");
@@ -427,7 +475,7 @@ window.onclick = (event) => {
   }
 };
 
-// Eventi Touch per Ingrandimento (Pinch-to-zoom / Pan / Double Tap)
+// Eventi Touch per Ingrandimento
 if (imgZoomato) {
   imgZoomato.addEventListener('touchstart', (e) => {
     if (e.touches.length === 2) {
@@ -440,7 +488,6 @@ if (imgZoomato) {
       const now = new Date().getTime();
       const tapLength = now - lastTap;
       if (tapLength < 300 && tapLength > 0) {
-        // Doppio tap: toggle tra 1x e 2.5x
         if (currentScale > 1) {
           resetZoom();
         } else {
@@ -488,7 +535,7 @@ if (imgZoomato) {
   });
 }
 
-// --- 7. CARICAMENTO CONFIGURAZIONE VOLANTINO DA CSV ---
+// --- 8. CARICAMENTO CONFIGURAZIONE VOLANTINO DA CSV ---
 async function caricaConfigurazioneApp() {
   try {
     const response = await fetch(SHEET_CONFIG_CSV);
@@ -513,6 +560,7 @@ async function caricaConfigurazioneApp() {
 
 // Init
 loadEvents();
+loadServices();
 caricaConfigurazioneApp();
 </script>
 </body>
