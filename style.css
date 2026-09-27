@@ -4,11 +4,13 @@
   --primary-green: #2e7d32;
   --ios-grey: #8e8e93;
   
-  /* Definisci qui i colori di fondo e testo */
+  /* Colori di fondo e testo */
   --bg-page: #f8f9fa;
   --bg-card: #ffffff;
+  --header-white: #ffffff;
   --text-primary: #333333;
   --text-secondary: #666666;
+  --text-dark: #333333;
   --border-color: #eeeeee;
 }
 
@@ -58,13 +60,13 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    color: var(--text-dark);
+    color: var(--text-primary);
     text-decoration: none;
 }
 
 .nav-item-header .nav-icon {
     font-size: 24px !important;
-    color: var(--text-dark) !important;
+    color: var(--text-primary) !important;
 }
 
 .nav-item-header .nav-label {
@@ -88,7 +90,7 @@ body {
     margin-right: 20px;
 }
 
-/* --- 4. SEZIONE EVENTI (NUOVA) --- */
+/* --- 4. SEZIONE EVENTI --- */
 .events-section {
     margin-bottom: 35px;
     overflow: hidden;
@@ -165,7 +167,7 @@ body {
 .event-title {
     font-size: 1.1rem;
     font-weight: 700;
-    color: var(--text-dark);
+    color: var(--text-primary);
     margin: 0;
 }
 
@@ -175,12 +177,12 @@ body {
     bottom: 0;
     left: 0;
     right: 0;
-    background: white;
+    background: var(--bg-card);
     display: flex;
     justify-content: space-around;
     padding-top: 12px;
     padding-bottom: calc(env(safe-area-inset-bottom) + 10px);
-    border-top: 1px solid #eee;
+    border-top: 1px solid var(--border-color);
     z-index: 1000;
 }
 
@@ -226,12 +228,10 @@ body {
 .btn-unsubscribe { background: #ff3b30; color: white; }
 
 /* --- HEADER ICONS: DESIGN MODERNO --- */
-
 .header-icons {
     display: flex;
     align-items: center;
     gap: 12px;
-    /* Alziamo leggermente tutto il gruppo dal fondo */
     margin-bottom: 4px; 
 }
 
@@ -241,35 +241,33 @@ body {
     align-items: center;
     justify-content: center;
     text-decoration: none;
-    color: #333333 !important;
+    color: var(--text-primary) !important;
     min-width: 60px;
-    color: #333333 !important;
 }
 
-/* Il segreto: un contenitore fisso per le icone */
 .icon-wrapper {
     width: 32px;
     height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 4px; /* Distanza tra icona e scritta */
-    color: #333333 !important;
+    margin-bottom: 4px;
+    color: var(--text-primary) !important;
 }
 
 /* Stile per l'icona WhatsApp (SVG) */
 .icon-wrapper svg {
-    width: 32px;  /* Portiamola a 32px (il massimo del contenitore) */
+    width: 32px;
     height: 32px;
-    transform: scale(1.15); /* Trucco finale: la facciamo "esordire" leggermente dai bordi invisibili */
-    color: #333333 !important;
+    transform: scale(1.15);
+    color: var(--text-primary) !important;
 }
 
 /* Stile per l'icona Chiama (Material) */
 .icon-wrapper .material-symbols-outlined {
     font-size: 26px !important;
     display: block;
-    color: #333333 !important;
+    color: var(--text-primary) !important;
 }
 
 .header-btn-label {
@@ -278,18 +276,16 @@ body {
     letter-spacing: 0.2px;
     line-height: 1;
     text-transform: uppercase;
-    color: #333333 !important;
+    color: var(--text-primary) !important;
 }
 
-/* Effetto moderno al tocco */
+/* Effetto al tocco */
 .header-btn:active {
     transform: scale(0.95);
     opacity: 0.7;
 }
 
-/* --- 7. TURNI:Aggiungi queste regole per gestire le immagini A4 e l'effetto zoom clicca e ingrandisci --- */
-
-/* Immagine Turno Principale */
+/* --- 7. TURNI: GESTIONE IMMAGINI A4 E ZOOM --- */
 .shift-card-main {
     width: 100%;
     background: white;
