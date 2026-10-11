@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Farmacia Brunello">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -60,8 +60,8 @@ body.modal-open .scrollable-content {
   width: 100vw;
   height: 100vh;
   background-color: rgba(0, 0, 0, 0.95);
-  overflow: auto;
-  -webkit-overflow-scrolling: touch;
+  overflow: hidden;
+  touch-action: none; /* Disabilita i gesti nativi della pagina per la gestione touch interna */
 }
 
 .pinch-zoom-container {
@@ -70,9 +70,8 @@ body.modal-open .scrollable-content {
   display: flex;
   justify-content: center;
   align-items: center;
-  overflow: auto;
-  padding: 20px 0;
-  box-sizing: border-box;
+  overflow: hidden;
+  position: relative;
 }
 
 #img-zoomato.modal-content {
@@ -82,6 +81,8 @@ body.modal-open .scrollable-content {
   display: block;
   margin: auto;
   border-radius: 8px;
+  transform-origin: center center;
+  will-change: transform;
 }
 
 /* Pulsante Chiudi sicuro per iOS Safe Area */
@@ -275,7 +276,7 @@ body.modal-open .scrollable-content {
 <!-- Modal Ingrandimento Immagini -->
 <div id="zoom-modal" class="modal">
   <span class="close-modal">&times;</span>
-  <div class="pinch-zoom-container">
+  <div class="pinch-zoom-container" id="zoom-container">
     <img class="modal-content" id="img-zoomato" alt="Ingrandimento Turno">
   </div>
 </div>
@@ -287,7 +288,7 @@ const SHEET_EVENTI_CSV  = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_Ea
 const SHEET_SERVIZI_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_EaTRsfUeqaRmkHSa814SNam_pdpyybRgeM2VtbOsbsXfv_7WhSx469O_eSVEI8Xv01xDdEXzLRzM/pub?gid=513108596&single=true&output=csv";
 const SHEET_TURNI_CSV   = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_EaTRsfUeqaRmkHSa814SNam_pdpyybRgeM2VtbOsbsXfv_7WhSx469O_eSVEI8Xv01xDdEXzLRzM/pub?gid=2033273365&single=true&output=csv";
 
-// Helper Parser CSV a prova di errori
+// Helper Parser CSV
 function parseCSV(text) {
   let lines = text.trim().split(/\r?\n/);
   let result = [];
@@ -317,7 +318,6 @@ function parseCSV(text) {
   return result;
 }
 
-// Parsing Date (YYYY-MM-DD e DD/MM/YYYY)
 function parseDateString(dateStr) {
   if (!dateStr) return null;
   dateStr = dateStr.trim();
@@ -480,7 +480,7 @@ function apriDettaglioEvento(eventObj) {
   navItems.forEach(nav => nav.classList.remove('active'));
 }
 
-// --- 5. CARICAMENTO SERVIZI (COLONNE A, B, C, D, E) ---
+// --- 5. CARICAMENTO SERVIZI ---
 async function loadServices() {
   const servicesList = document.getElementById('services-list');
   const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?q=80&w=1000&auto=format&fit=crop';
@@ -621,18 +621,91 @@ function aggiungiMiniatura(turno, label) {
   document.getElementById('lista-altri-turni').appendChild(div);
 }
 
-// --- 7. ZOOM SICURO E NASCONDIMENTO HEADER ---
+// --- 7. GESTIONE ZOOM TOUCH REALE E NATIVO ---
 const modal = document.getElementById("zoom-modal");
 const imgZoomato = document.getElementById("img-zoomato");
 const closeBtn = document.querySelector(".close-modal");
+const zoomContainer = document.getElementById("zoom-container");
+
+let currentScale = 1;
+let startScale = 1;
+let currentX = 0;
+let currentY = 0;
+let startX = 0;
+let startY = 0;
+let initialDistance = 0;
+let isDragging = false;
+let lastTap = 0;
+
+function updateTransform() {
+  imgZoomato.style.transform = `translate(${currentX}px, ${currentY}px) scale(${currentScale})`;
+}
+
+function resetZoom() {
+  currentScale = 1;
+  currentX = 0;
+  currentY = 0;
+  updateTransform();
+}
+
+function getDistance(touches) {
+  const dx = touches[0].clientX - touches[1].clientX;
+  const dy = touches[0].clientY - touches[1].clientY;
+  return Math.hypot(dx, dy);
+}
+
+// Eventi Touch per lo Zoom
+if (zoomContainer) {
+  zoomContainer.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 2) {
+      isDragging = false;
+      initialDistance = getDistance(e.touches);
+      startScale = currentScale;
+    } else if (e.touches.length === 1) {
+      // Gestione doppio tap per zoom rapido
+      const now = new Date().getTime();
+      if (now - lastTap < 300) {
+        if (currentScale > 1) {
+          resetZoom();
+        } else {
+          currentScale = 2.5;
+          updateTransform();
+        }
+      } else {
+        isDragging = true;
+        startX = e.touches[0].clientX - currentX;
+        startY = e.touches[0].clientY - currentY;
+      }
+      lastTap = now;
+    }
+  }, { passive: true });
+
+  zoomContainer.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 2) {
+      const newDistance = getDistance(e.touches);
+      if (initialDistance > 0) {
+        currentScale = Math.min(Math.max(1, startScale * (newDistance / initialDistance)), 4);
+        updateTransform();
+      }
+    } else if (e.touches.length === 1 && isDragging && currentScale > 1) {
+      currentX = e.touches[0].clientX - startX;
+      currentY = e.touches[0].clientY - startY;
+      updateTransform();
+    }
+  }, { passive: true });
+
+  zoomContainer.addEventListener('touchend', (e) => {
+    if (e.touches.length < 2) initialDistance = 0;
+    if (e.touches.length === 0) isDragging = false;
+    if (currentScale < 1) resetZoom();
+  }, { passive: true });
+}
 
 function aprireZoom(src) {
   if (!src || !modal || !imgZoomato) return;
-
+  resetZoom();
   modal.style.display = "block";
   imgZoomato.src = src;
-  
-  // Nasconde l'header superiore (logo, WhatsApp, Chiama)
   document.body.classList.add('modal-open');
 }
 
@@ -644,6 +717,7 @@ if (turnoImgClickable) {
 function chiudiZoom() {
   modal.style.display = "none";
   document.body.classList.remove('modal-open');
+  resetZoom();
 }
 
 if (closeBtn) closeBtn.onclick = chiudiZoom;
