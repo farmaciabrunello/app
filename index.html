@@ -61,7 +61,7 @@ OneSignalDeferred.push(async function(OneSignal) {
 </header>
 
 <main class="scrollable-content">
-<div id="home-content">
+<div id="home-content" class="app-section">
 <!-- Riquadro Notifiche in Home -->
 <section id="home-notification-panel" class="section notification-panel">
 <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center;">
@@ -101,7 +101,8 @@ OneSignalDeferred.push(async function(OneSignal) {
 </section>
 </div>
 
-<section id="turni-section" class="section" style="display:none; padding: 0 20px;">
+<!-- Sezione Turni -->
+<section id="turni-section" class="app-section" style="display:none; padding: 0 20px;">
 <div class="section-header">
 <h2>Turni Farmacia</h2>
 </div>
@@ -119,24 +120,34 @@ OneSignalDeferred.push(async function(OneSignal) {
 </div>
 </section>
 
-<!-- Sezione Dettaglio Servizio (Nuova Scheda) -->
-<section id="service-detail-section" class="section" style="display:none; padding: 0 20px;">
-<div class="section-header" style="justify-content: flex-start; gap: 10px;">
-<button onclick="tornaAllaHomeDaServizio()" style="background: none; border: none; cursor: pointer; display: flex; align-items: center; color: var(--primary-green); font-weight: bold;">
-<span class="material-symbols-outlined" style="font-size: 20px;">arrow_back</span> Indietro
-</button>
-<h2 id="service-detail-title" style="margin: 0;">Dettaglio Servizio</h2>
+<!-- Sezione Prenota (Placeholder opzionale se richiamato dal tab) -->
+<section id="prenota-section" class="app-section" style="display:none; padding: 0 20px;">
+<div class="section-header">
+<h2>Prenota Servizio</h2>
 </div>
-<div class="service-detail-card" style="background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border: 1px solid var(--border-color);">
-<img id="service-detail-img" src="" alt="Immagine Servizio" style="width: 100%; height: auto; max-height: 300px; object-fit: cover; display: block;">
+<div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center;">
+<p style="color: #666;">Sezione prenotazioni in arrivo.</p>
+</div>
+</section>
+
+<!-- Sezione Dettaglio Servizio (Nuova Scheda) -->
+<section id="service-detail-section" class="app-section" style="display:none; padding: 0 20px;">
+<div class="section-header" style="justify-content: flex-start; gap: 10px;">
+<button onclick="tornaAllaHomeDaServizio()" style="background: none; border: none; cursor: pointer; display: flex; align-items: center; color: var(--primary-green); font-weight: bold; font-size: 1rem;">
+<span class="material-symbols-outlined" style="font-size: 22px;">arrow_back</span> Indietro
+</button>
+</div>
+<div class="service-detail-card" style="background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border: 1px solid var(--border-color); margin-top: 10px;">
+<img id="service-detail-img" src="" alt="Immagine Servizio" style="width: 100%; height: auto; max-height: 320px; object-fit: cover; display: block;">
 <div style="padding: 20px;">
+<h2 id="service-detail-title" style="font-size: 1.25rem; color: var(--primary-green); margin-bottom: 12px;"></h2>
 <p id="service-detail-text" style="font-size: 1rem; line-height: 1.6; color: var(--text-primary); white-space: pre-line; margin: 0;"></p>
 </div>
 </div>
 </section>
 
 <!-- Sezione Impostazioni -->
-<section id="impostazioni-section" class="section" style="display:none; padding: 0 20px;">
+<section id="impostazioni-section" class="app-section" style="display:none; padding: 0 20px;">
 <div class="section-header">
 <h2>Impostazioni</h2>
 </div>
@@ -155,19 +166,19 @@ OneSignalDeferred.push(async function(OneSignal) {
 </main>
 
 <footer class="main-nav">
-<div class="nav-item active">
+<div class="nav-item active" data-target="home-content">
 <span class="material-symbols-outlined nav-icon">home</span>
 <span class="nav-label">HOME</span>
 </div>
-<div class="nav-item">
+<div class="nav-item" data-target="prenota-section">
 <span class="material-symbols-outlined nav-icon">calendar_month</span>
 <span class="nav-label">PRENOTA</span>
 </div>
-<div class="nav-item">
+<div class="nav-item" data-target="turni-section">
 <span class="material-symbols-outlined nav-icon">schedule</span>
 <span class="nav-label">TURNI</span>
 </div>
-<div class="nav-item">
+<div class="nav-item" data-target="impostazioni-section">
 <span class="material-symbols-outlined nav-icon">settings</span>
 <span class="nav-label">IMPOSTAZIONI</span>
 </div>
@@ -186,7 +197,7 @@ const SHEET_EVENTI_CSV  = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_Ea
 const SHEET_SERVIZI_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_EaTRsfUeqaRmkHSa814SNam_pdpyybRgeM2VtbOsbsXfv_7WhSx469O_eSVEI8Xv01xDdEXzLRzM/pub?gid=513108596&single=true&output=csv";
 const SHEET_TURNI_CSV   = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_EaTRsfUeqaRmkHSa814SNam_pdpyybRgeM2VtbOsbsXfv_7WhSx469O_eSVEI8Xv01xDdEXzLRzM/pub?gid=2033273365&single=true&output=csv";
 
-// Helper conversione CSV standard originale (Eventi, Turni, ecc.)
+// Helper conversione CSV standard (Eventi, Turni, ecc.)
 function csvToObjects(csvText) {
   const lines = csvText.trim().split(/\r?\n/);
   if (lines.length < 2) return [];
@@ -245,8 +256,8 @@ function parseServiziCSV(csvText) {
     values.push(current.replace(/^"|"$/g, '').trim());
     
     return {
-      titolo: values[0] || '',            // Colonna A: Titolo
-      descrizione: values[1] || '',       // Colonna B: Descrizione breve (Home)
+      titolo: values[0] || '',            // Colonna A: Titolo (Verde Home)
+      descrizione: values[1] || '',       // Colonna B: Descrizione breve (Nero Home)
       immagineHome: values[2] || '',      // Colonna C: Immagine Home
       immagineDettaglio: values[3] || '', // Colonna D: Immagine Nuova Scheda
       testoDettaglio: values[4] || ''     // Colonna E: Testo Nuova Scheda
@@ -315,38 +326,35 @@ function gestisciDisiscrizione() {
   });
 }
 
-// --- 3. NAVIGAZIONE ---
+// --- 3. NAVIGAZIONE INFERIORE ROBUSTA ---
 const navItems = document.querySelectorAll('.nav-item');
+const appSections = document.querySelectorAll('.app-section');
+
 navItems.forEach(item => {
   item.addEventListener('click', function() {
     navItems.forEach(nav => nav.classList.remove('active'));
     this.classList.add('active');
 
-    const label = this.querySelector('.nav-label').innerText;
-    const homeContent = document.getElementById('home-content');
-    const turniSection = document.getElementById('turni-section');
-    const impostazioniSection = document.getElementById('impostazioni-section');
-    const serviceDetailSection = document.getElementById('service-detail-section');
+    const targetId = this.getAttribute('data-target');
 
-    if (homeContent) homeContent.style.display = 'none';
-    if (turniSection) turniSection.style.display = 'none';
-    if (impostazioniSection) impostazioniSection.style.display = 'none';
-    if (serviceDetailSection) serviceDetailSection.style.display = 'none';
+    appSections.forEach(section => {
+      section.style.display = 'none';
+    });
 
-    if (label === 'TURNI') {
-      if (turniSection) turniSection.style.display = 'block';
+    const targetSection = document.getElementById(targetId);
+    if (targetSection) {
+      targetSection.style.display = 'block';
+    }
+
+    if (targetId === 'turni-section') {
       loadTurni();
-    } else if (label === 'HOME') {
-      if (homeContent) homeContent.style.display = 'block';
+    } else if (targetId === 'home-content') {
       loadEvents();
       loadServices();
-    } else if (label === 'IMPOSTAZIONI') {
-      if (impostazioniSection) impostazioniSection.style.display = 'block';
     }
   });
 });
 
 // --- 4. CARICAMENTO EVENTI DA CSV ---
 async function loadEvents() {
-  const eventsList = document.getElementById('events-list');
-  const DEFAULT_IMAGE = '
+  const
