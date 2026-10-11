@@ -186,8 +186,42 @@ const SHEET_EVENTI_CSV  = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_Ea
 const SHEET_SERVIZI_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_EaTRsfUeqaRmkHSa814SNam_pdpyybRgeM2VtbOsbsXfv_7WhSx469O_eSVEI8Xv01xDdEXzLRzM/pub?gid=513108596&single=true&output=csv";
 const SHEET_TURNI_CSV   = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_EaTRsfUeqaRmkHSa814SNam_pdpyybRgeM2VtbOsbsXfv_7WhSx469O_eSVEI8Xv01xDdEXzLRzM/pub?gid=2033273365&single=true&output=csv";
 
-// Helper conversione CSV basata sulle posizioni esatte delle 5 colonne (A, B, C, D, E)
+// Helper conversione CSV standard originale (Eventi, Turni, ecc.)
 function csvToObjects(csvText) {
+  const lines = csvText.trim().split(/\r?\n/);
+  if (lines.length < 2) return [];
+  
+  const headers = lines[0].split(/[,;]/).map(h => h.replace(/^"|"$/g, '').trim().toLowerCase());
+  
+  return lines.slice(1).map(line => {
+    if (!line.trim()) return null;
+    
+    const values = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if ((char === ',' || char === ';') && !inQuotes) {
+        values.push(current.replace(/^"|"$/g, '').trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    values.push(current.replace(/^"|"$/g, '').trim());
+    
+    const obj = {};
+    headers.forEach((header, index) => {
+      obj[header] = values[index] || '';
+    });
+    return obj;
+  }).filter(Boolean);
+}
+
+// Helper specifico per il foglio SERVIZI basato sulle 5 colonne in ordine preciso (A, B, C, D, E)
+function parseServiziCSV(csvText) {
   const lines = csvText.trim().split(/\r?\n/);
   if (lines.length < 2) return [];
   
@@ -211,9 +245,9 @@ function csvToObjects(csvText) {
     values.push(current.replace(/^"|"$/g, '').trim());
     
     return {
-      titolo: values[0] || '',       // Colonna A: Titolo
-      descrizione: values[1] || '',  // Colonna B: Descrizione breve (Home)
-      immagineHome: values[2] || '', // Colonna C: Immagine Home
+      titolo: values[0] || '',            // Colonna A: Titolo
+      descrizione: values[1] || '',       // Colonna B: Descrizione breve (Home)
+      immagineHome: values[2] || '',      // Colonna C: Immagine Home
       immagineDettaglio: values[3] || '', // Colonna D: Immagine Nuova Scheda
       testoDettaglio: values[4] || ''     // Colonna E: Testo Nuova Scheda
     };
@@ -315,157 +349,4 @@ navItems.forEach(item => {
 // --- 4. CARICAMENTO EVENTI DA CSV ---
 async function loadEvents() {
   const eventsList = document.getElementById('events-list');
-  const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1586015555751-63bb77f4322a?q=80&w=1000&auto=format&fit=crop';
-
-  try {
-    const response = await fetch(SHEET_EVENTI_CSV);
-    const csvText = await response.text();
-    const lines = csvText.trim().split(/\r?\n/);
-    const eventsData = lines.slice(1).map(line => {
-      const parts = line.split(/[,;]/);
-      return { titolo: parts[0]?.replace(/^"|"$/g, '').trim(), data: parts[1]?.replace(/^"|"$/g, '').trim(), immagine: parts[2]?.replace(/^"\vert{}"$/g, '').trim() };
-    });
-
-    eventsList.innerHTML = '';
-
-    if (!eventsData || eventsData.length === 0) {
-      eventsList.innerHTML = '<div class="event-card"><div class="event-info">Nessun evento in programma.</div></div>';
-      return;
-    }
-    eventsData.forEach(event => {
-      const imgUrl = (event.immagine && event.immagine.trim() !== "") ? event.immagine : DEFAULT_IMAGE;
-      eventsList.innerHTML += `
-      <div class="event-card">
-        <img src="${imgUrl}" class="event-image" alt="${event.titolo || 'Evento'}">
-        <div class="event-info">
-          <span class="event-date">${event.data || 'Prossimamente'}</span>
-          <h4 class="event-title">${event.titolo || 'Nuovo Evento'}</h4>
-        </div>
-      </div>`;
-    });
-  } catch (error) {
-    console.error("Errore caricamento eventi CSV:", error);
-    eventsList.innerHTML = '<div class="event-card"><div class="event-info">Errore di caricamento.</div></div>';
-  }
-}
-
-// --- 5. CARICAMENTO SERVIZI DA CSV (COLONNE A, B, C, D, E) ---
-async function loadServices() {
-  const servicesList = document.getElementById('services-list');
-  const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?q=80&w=1000&auto=format&fit=crop';
-
-  try {
-    const response = await fetch(SHEET_SERVIZI_CSV);
-    const csvText = await response.text();
-    const data = csvToObjects(csvText);
-
-    servicesList.innerHTML = '';
-
-    if (!data || data.length === 0) {
-      servicesList.innerHTML = '<div class="service-card"><div class="event-info">Nessun servizio disponibile.</div></div>';
-      return;
-    }
-    
-    data.forEach((service) => {
-      const imgUrl = (service.immagineHome && service.immagineHome.trim() !== "") ? service.immagineHome : DEFAULT_IMAGE;
-      
-      const card = document.createElement('div');
-      card.className = 'service-card clickable-card';
-      card.innerHTML = `
-        <img src="${imgUrl}" class="service-image" alt="${service.titolo || 'Servizio'}">
-        <div class="event-info">
-          <h4 class="event-title" style="color: var(--primary-green); margin-bottom: 4px;">${service.titolo || 'Servizio'}</h4>
-          <span class="event-date" style="color: var(--text-primary); font-weight: normal; text-transform: none; font-size: 0.85rem;">${service.descrizione || ''}</span>
-        </div>`;
-      
-      // Al click apre la scheda dettaglio con immagine colonna D (immagineDettaglio) e testo colonna E (testoDettaglio)
-      card.onclick = () => apriDettaglioServizio(service);
-      servicesList.appendChild(card);
-    });
-  } catch (error) {
-    console.error("Errore caricamento servizi CSV:", error);
-    servicesList.innerHTML = '<div class="service-card"><div class="event-info">Errore di caricamento.</div></div>';
-  }
-}
-
-function apriDettaglioServizio(service) {
-  const homeContent = document.getElementById('home-content');
-  const turniSection = document.getElementById('turni-section');
-  const impostazioniSection = document.getElementById('impostazioni-section');
-  const serviceDetailSection = document.getElementById('service-detail-section');
-
-  if (homeContent) homeContent.style.display = 'none';
-  if (turniSection) turniSection.style.display = 'none';
-  if (impostazioniSection) impostazioniSection.style.display = 'none';
-  if (serviceDetailSection) serviceDetailSection.style.display = 'block';
-
-  // Popola titolo, immagine (Colonna D) e testo (Colonna E)
-  document.getElementById('service-detail-title').innerText = service.titolo || 'Dettaglio Servizio';
-  
-  const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?q=80&w=1000&auto=format&fit=crop';
-  const imgColD = (service.immagineDettaglio && service.immagineDettaglio.trim() !== '') ? service.immagineDettaglio : DEFAULT_IMAGE;
-  const textColE = service.testoDettaglio || 'Nessuna descrizione disponibile.';
-
-  document.getElementById('service-detail-img').src = imgColD;
-  document.getElementById('service-detail-text').innerText = textColE;
-
-  // Rimuove lo stato attivo dalla barra di navigazione inferiore
-  navItems.forEach(nav => nav.classList.remove('active'));
-}
-
-function tornaAllaHomeDaServizio() {
-  const homeContent = document.getElementById('home-content');
-  const serviceDetailSection = document.getElementById('service-detail-section');
-
-  if (serviceDetailSection) serviceDetailSection.style.display = 'none';
-  if (homeContent) homeContent.style.display = 'block';
-
-  // Riattiva l'icona Home nella barra di navigazione
-  navItems.forEach((nav, idx) => {
-    if (idx === 0) nav.classList.add('active');
-    else nav.classList.remove('active');
-  });
-}
-
-// --- 6. CARICAMENTO TURNI DA CSV ---
-async function loadTurni() {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  try {
-    const response = await fetch(SHEET_TURNI_CSV);
-    const csvText = await response.text();
-    const lines = csvText.trim().split(/\r?\n/);
-    const data = lines.slice(1).map(line => {
-      const p = line.split(/[,;]/);
-      return { inizio: p[0]?.replace(/^"|"$/g, '').trim(), fine: p[1]?.replace(/^"|"$/g, '').trim(), immagine: p[2]?.replace(/^"\vert{}"$/g, '').trim() };
-    });
-
-    const containerAttuale = document.getElementById('img-turno-attuale');
-    const listaAltri = document.getElementById('lista-altri-turni');
-    if (listaAltri) listaAltri.innerHTML = '';
-
-    let trovato = false;
-
-    data.forEach((turno, index) => {
-      if (!turno.inizio) return;
-      const inizio = new Date(turno.inizio);
-      let fine;
-      if (turno.fine) {
-        fine = new Date(turno.fine);
-        fine.setHours(23, 59, 59, 999);
-      } else {
-        fine = new Date(inizio);
-        fine.setDate(fine.getDate() + 7);
-      }
-
-      if (today >= inizio && today <= fine) {
-        trovato = true;
-        if (containerAttuale && turno.immagine) {
-          containerAttuale.src = turno.immagine;
-        }
-        if (data[index - 1] && data[index - 1].immagine) {
-          aggiungiMiniatura(data[index - 1], "Sett. Precedente");
-        }
-        if (data[index + 1] && data[index + 1].immagine) {
-          aggiungiMiniatura(data
+  const DEFAULT_IMAGE = '
