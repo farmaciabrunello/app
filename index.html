@@ -20,21 +20,104 @@
 <link rel="manifest" href="manifest.json">
 <title>Farmacia Brunello</title>
 <link rel="stylesheet" href="style.css">
+
+<!-- Libreria OneSignal -->
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script>
 window.OneSignalDeferred = window.OneSignalDeferred || [];
 OneSignalDeferred.push(async function(OneSignal) {
-  try {
-    await OneSignal.init({
-      appId: "7baa9639-10e1-4357-bfa8-6ab1b6c4c688",
-      notifyButton: { enable: true },
-    });
-  } catch(e) {
-    console.error("OneSignal init error:", e);
-  }
+  await OneSignal.init({
+    appId: "7baa9639-10e1-4357-bfa8-6ab1b6c4c688",
+    notifyButton: { enable: true },
+  });
 });
 </script>
+
+<!-- Google Material Symbols -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+
+<!-- Libreria Pinch-Zoom per l'ingrandimento delle immagini dei turni -->
+<script src="https://cdn.jsdelivr.net/npm/pinch-zoom-js@2.3.5/dist/pinch-zoom.min.js"></script>
+
+<!-- Stili specifici interni per la gestione dello zoom e visibilità header -->
+<style>
+/* --- Gestione VisibilitàHeader quando il Modal Zoom è aperto --- */
+body.modal-open .main-header {
+  display: none !important;
+}
+
+body.modal-open .scrollable-content {
+  overflow: hidden !important; /* Blocca lo scroll del body quando lo zoom è aperto */
+}
+
+/* --- Stili specifici per il Modal Zoom --- */
+#zoom-modal.modal {
+  display: none;
+  position: fixed;
+  z-index: 10000; /* Z-index altissimo per essere sopra tutto */
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.95);
+  overflow: hidden !important;
+  box-sizing: border-box;
+}
+
+/* Contenitore necessario per la libreria pinch-zoom */
+.pinch-zoom-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+}
+
+/* Immagine zoomabile */
+#img-zoomato.modal-content {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* Tasto Chiudi pulito e posizionato correttamente in alto a destra, rispettando la Safe Area */
+.close-modal {
+  position: absolute;
+  top: calc(env(safe-area-inset-top) + 15px);
+  right: 20px;
+  color: #ffffff;
+  font-size: 36px;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 10001; /* Sopra l'immagine zoomata */
+  background: rgba(0, 0, 0, 0.4);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.close-modal:active {
+  transform: scale(0.9);
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* --- Altri stili di utilità --- */
+.clickable-card {
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+.clickable-card:active {
+  transform: scale(0.97);
+}
+</style>
+
 </head>
 <body>
 <header class="main-header">
@@ -90,7 +173,7 @@ OneSignalDeferred.push(async function(OneSignal) {
 <h2>Prossimi Eventi</h2>
 </div>
 <div class="events-container" id="events-list">
-<div class="event-card"><div class="event-info">Caricamento eventi...</div></div>
+<div class="event-card">Caricamento eventi...</div>
 </div>
 </section>
 
@@ -100,7 +183,7 @@ OneSignalDeferred.push(async function(OneSignal) {
 <h2>I Nostri Servizi</h2>
 </div>
 <div class="events-container" id="services-list">
-<div class="service-card"><div class="event-info">Caricamento servizi...</div></div>
+<div class="service-card">Caricamento servizi...</div>
 </div>
 </section>
 </div>
@@ -113,7 +196,7 @@ OneSignalDeferred.push(async function(OneSignal) {
 <div id="turno-attuale-container">
 <p style="font-size: 0.9rem; margin-bottom: 10px; color: #666;">Turno in corso:</p>
 <div class="shift-card-main">
-<img id="img-turno-attuale" src="" class="zoomable-img" alt="Turno Attuale">
+<img id="img-turno-attuale" src="" class="zoomable-img clickable-card" alt="Turno Attuale">
 </div>
 </div>
 
@@ -124,7 +207,7 @@ OneSignalDeferred.push(async function(OneSignal) {
 </div>
 </section>
 
-<!-- Sezione Prenota -->
+<!-- Sezione Prenota (Placeholder) -->
 <section id="prenota-section" class="app-section" style="display:none; padding: 0 20px;">
 <div class="section-header">
 <h2>Prenota Servizio</h2>
@@ -188,20 +271,24 @@ OneSignalDeferred.push(async function(OneSignal) {
 </div>
 </footer>
 
-<!-- Modal Ingrandimento Immagini -->
+<!-- Modal Ingrandimento Immagini con Pinch-To-Zoom -->
 <div id="zoom-modal" class="modal">
   <span class="close-modal">&times;</span>
-  <img class="modal-content" id="img-zoomato" alt="Ingrandimento Turno">
+  <!-- Il contenitore pinch-zoom-container è obbligatorio per la libreria -->
+  <div class="pinch-zoom-container">
+    <img class="modal-content" id="img-zoomato" alt="Ingrandimento Turno">
+  </div>
 </div>
 
 <script>
 // --- 1. CONFIGURAZIONE LINK GOOGLE SHEETS (CSV) ---
+// Sostituisci i gid con quelli corretti del tuo foglio se necessario
 const SHEET_CONFIG_CSV  = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_EaTRsfUeqaRmkHSa814SNam_pdpyybRgeM2VtbOsbsXfv_7WhSx469O_eSVEI8Xv01xDdEXzLRzM/pub?gid=0&single=true&output=csv";
 const SHEET_EVENTI_CSV  = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_EaTRsfUeqaRmkHSa814SNam_pdpyybRgeM2VtbOsbsXfv_7WhSx469O_eSVEI8Xv01xDdEXzLRzM/pub?gid=1635755565&single=true&output=csv";
 const SHEET_SERVIZI_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_EaTRsfUeqaRmkHSa814SNam_pdpyybRgeM2VtbOsbsXfv_7WhSx469O_eSVEI8Xv01xDdEXzLRzM/pub?gid=513108596&single=true&output=csv";
 const SHEET_TURNI_CSV   = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_EaTRsfUeqaRmkHSa814SNam_pdpyybRgeM2VtbOsbsXfv_7WhSx469O_eSVEI8Xv01xDdEXzLRzM/pub?gid=2033273365&single=true&output=csv";
 
-// Helper Parser CSV avanzato che gestisce virgolette e virgole interne
+// Helper Parser CSV Resiliente
 function parseCSV(text) {
   let lines = text.trim().split(/\r?\n/);
   let result = [];
@@ -231,7 +318,7 @@ function parseCSV(text) {
   return result;
 }
 
-// Parsing delle Date flessibile
+// Parsing delle Date flessibile (YYYY-MM-DD e DD/MM/YYYY)
 function parseDateString(dateStr) {
   if (!dateStr) return null;
   dateStr = dateStr.trim();
@@ -244,8 +331,7 @@ function parseDateString(dateStr) {
 }
 
 // --- 2. LOGICA ONESIGNAL NOTIFICHE ---
-window.OneSignalDeferred = window.OneSignalDeferred || [];
-
+// (Rimane invariata, gestisce i pulsanti in Home e Impostazioni)
 async function updateButtons() {
   OneSignalDeferred.push(async function(OneSignal) {
     try {
@@ -306,21 +392,25 @@ function gestisciDisiscrizione() {
   });
 }
 
-// --- 3. NAVIGAZIONE INFERIORE ---
+// --- 3. NAVIGAZIONE INFERIORE ROBUSTA ---
 const navItems = document.querySelectorAll('.nav-item');
 const appSections = document.querySelectorAll('.app-section');
 
 navItems.forEach(item => {
   item.addEventListener('click', function() {
+    // 1. Reset stati attivi dei tab
     navItems.forEach(nav => nav.classList.remove('active'));
     this.classList.add('active');
 
-    const targetId = this.getAttribute('data-target');
+    // 2. Nascondi tutte le sezioni principali
     appSections.forEach(section => { section.style.display = 'none'; });
 
+    // 3. Mostra la sezione target specificata in data-target
+    const targetId = this.getAttribute('data-target');
     const targetSection = document.getElementById(targetId);
     if (targetSection) { targetSection.style.display = 'block'; }
 
+    // 4. Carica dati specifici se necessario
     if (targetId === 'turni-section') {
       loadTurni();
     } else if (targetId === 'home-content') {
@@ -330,9 +420,16 @@ navItems.forEach(item => {
   });
 });
 
-// --- 4. CARICAMENTO EVENTI (CON NASCONDIGLIO SE VUOTO E DETTAGLIO) ---
+// Helper per forzare l'attivazione di un tab tramite targetId (es. per tasto Indietro)
+function attivaTabPerId(targetId) {
+  navItems.forEach(nav => {
+    if (nav.getAttribute('data-target') === targetId) nav.classList.add('active');
+    else nav.classList.remove('active');
+  });
+}
+
+// --- 4. CARICAMENTO EVENTI DA GOOGLE SHEETS (CSV) ---
 async function loadEvents() {
-  const eventsSection = document.querySelector('.events-section');
   const eventsList = document.getElementById('events-list');
   const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1586015555751-63bb77f4322a?q=80&w=1000&auto=format&fit=crop';
 
@@ -342,53 +439,30 @@ async function loadEvents() {
     const rows = parseCSV(text);
 
     eventsList.innerHTML = '';
-    
-    // Se non ci sono eventi, nasconde completamente la sezione Prossimi Eventi
-    if (!rows || rows.length === 0) {
-      if (eventsSection) eventsSection.style.display = 'none';
+    if (rows.length === 0) {
+      eventsList.innerHTML = '<div class="event-card"><div class="event-info">Nessun evento in programma.</div></div>';
       return;
-    } else {
-      if (eventsSection) eventsSection.style.display = 'block';
     }
 
     rows.forEach(row => {
       const titolo = row[0] || 'Nuovo Evento';
       const dataEv = row[1] || 'Prossimamente';
-      const immagineHome = (row[2] && row[2].startsWith('http')) ? row[2] : DEFAULT_IMAGE;
-      // Colonna D (indice 3): Testo dettagliato dell'evento
-      const testoDettaglio = row[3] || row.slice(3).join(', ') || 'Nessuna descrizione disponibile per questo evento.';
+      // Mappatura esatta per Foglio Eventi: Colonna C (indice 2) = Immagine
+      const imgUrl = (row[2] && row[2].startsWith('http')) ? row[2] : DEFAULT_IMAGE;
 
-      const eventData = { titolo, dataEv, immagineHome, testoDettaglio };
-
-      const card = document.createElement('div');
-      card.className = 'event-card clickable-card';
-      card.innerHTML = `
-        <img src="${immagineHome}" class="event-image" alt="${titolo}">
+      eventsList.innerHTML += `
+      <div class="event-card">
+        <img src="${imgUrl}" class="event-image" alt="${titolo}">
         <div class="event-info">
           <span class="event-date">${dataEv}</span>
           <h4 class="event-title">${titolo}</h4>
-        </div>`;
-      
-      card.onclick = () => apriDettaglioEvento(eventData);
-      eventsList.appendChild(card);
+        </div>
+      </div>`;
     });
   } catch (error) {
     console.error("Errore eventi:", error);
-    if (eventsSection) eventsSection.style.display = 'none';
+    eventsList.innerHTML = '<div class="event-card"><div class="event-info">Errore caricamento eventi.</div></div>';
   }
-}
-
-function apriDettaglioEvento(eventObj) {
-  appSections.forEach(section => { section.style.display = 'none'; });
-
-  const detailSection = document.getElementById('service-detail-section');
-  if (detailSection) detailSection.style.display = 'block';
-
-  document.getElementById('service-detail-title').innerText = eventObj.titolo;
-  document.getElementById('service-detail-img').src = eventObj.immagineHome;
-  document.getElementById('service-detail-text').innerText = eventObj.testoDettaglio;
-
-  navItems.forEach(nav => nav.classList.remove('active'));
 }
 
 // --- 5. CARICAMENTO SERVIZI (COLONNE A, B, C, D, E) ---
@@ -412,8 +486,10 @@ async function loadServices() {
       if (!titolo) return;
 
       const descrizione = row[1] || '';
+      // Mappatura esatta per Foglio Servizi: Colonna C (indice 2) = Immagine Home, Colonna D (indice 3) = Immagine Dettaglio
       const immagineHome = (row[2] && row[2].startsWith('http')) ? row[2] : DEFAULT_IMAGE;
       const immagineDettaglio = (row[3] && row[3].startsWith('http')) ? row[3] : immagineHome;
+      // Colonna E (indice 4) = Testo Dettaglio completo
       const testoDettaglio = row[4] || row.slice(4).join(', ') || 'Nessuna descrizione disponibile.';
 
       const serviceData = { titolo, descrizione, immagineHome, immagineDettaglio, testoDettaglio };
@@ -426,150 +502,3 @@ async function loadServices() {
           <h4 class="event-title" style="color: var(--primary-green); margin-bottom: 4px;">${titolo}</h4>
           <span class="event-date" style="color: var(--text-primary); font-weight: normal; text-transform: none; font-size: 0.85rem;">${descrizione}</span>
         </div>`;
-      
-      card.onclick = () => apriDettaglioServizio(serviceData);
-      servicesList.appendChild(card);
-    });
-  } catch (error) {
-    console.error("Errore servizi:", error);
-    servicesList.innerHTML = '<div class="service-card"><div class="event-info">Errore caricamento servizi.</div></div>';
-  }
-}
-
-function apriDettaglioServizio(service) {
-  appSections.forEach(section => { section.style.display = 'none'; });
-
-  const detailSection = document.getElementById('service-detail-section');
-  if (detailSection) detailSection.style.display = 'block';
-
-  document.getElementById('service-detail-title').innerText = service.titolo;
-  document.getElementById('service-detail-img').src = service.immagineDettaglio;
-  document.getElementById('service-detail-text').innerText = service.testoDettaglio;
-
-  navItems.forEach(nav => nav.classList.remove('active'));
-}
-
-function tornaAllaHomeDaServizio() {
-  appSections.forEach(section => { section.style.display = 'none'; });
-  document.getElementById('home-content').style.display = 'block';
-
-  navItems.forEach((nav, idx) => {
-    if (idx === 0) nav.classList.add('active');
-    else nav.classList.remove('active');
-  });
-}
-
-// --- 6. CARICAMENTO TURNI CON CAMBIO ORARIO ALLE 08:45 ---
-async function loadTurni() {
-  const now = new Date(); // Prende data e ora attuali esatte
-
-  try {
-    const response = await fetch(SHEET_TURNI_CSV);
-    const text = await response.text();
-    const rows = parseCSV(text);
-
-    const containerAttuale = document.getElementById('img-turno-attuale');
-    const listaAltri = document.getElementById('lista-altri-turni');
-    if (listaAltri) listaAltri.innerHTML = '';
-
-    let trovato = false;
-    let primaImmagineValida = '';
-
-    rows.forEach((row, index) => {
-      const inizioStr = row[0];
-      const fineStr = row[1];
-      
-      const imgTurno = row.find(cell => cell.startsWith('http')) || '';
-      if (!primaImmagineValida && imgTurno) {
-        primaImmagineValida = imgTurno;
-      }
-
-      if (!inizioStr) return;
-      
-      const inizio = parseDateString(inizioStr);
-      if (!inizio) return;
-      
-      // Imposta l'orario di inizio turno alle 08:45:00 spaccate
-      inizio.setHours(8, 45, 0, 0);
-
-      let fine = parseDateString(fineStr);
-      if (fine) {
-        // Il turno scade alle 08:45:00 del giorno di fine (quindi copre fino alle 08:44:59)
-        fine.setHours(8, 45, 0, 0);
-      } else {
-        // Se non è specificata la fine, dura 7 giorni esatti fino alle 08:45:00
-        fine = new Date(inizio);
-        fine.setDate(fine.getDate() + 7);
-      }
-
-      // Controlla se il momento attuale si trova esattamente tra inizio (incluso) e fine (escluso)
-      if (now >= inizio && now < fine) {
-        trovato = true;
-        if (containerAttuale && imgTurno) {
-          containerAttuale.src = imgTurno;
-        }
-        if (rows[index - 1]) {
-          const imgPrev = rows[index - 1].find(c => c.startsWith('http'));
-          if (imgPrev) aggiungiMiniatura({ immagine: imgPrev }, "Sett. Precedente");
-        }
-        if (rows[index + 1]) {
-          const imgNext = rows[index + 1].find(c => c.startsWith('http'));
-          if (imgNext) aggiungiMiniatura({ immagine: imgNext }, "Sett. Successiva");
-        }
-      }
-    });
-
-    // Fallback se nessuna data corrisponde
-    if (!trovato && primaImmagineValida && containerAttuale) {
-      containerAttuale.src = primaImmagineValida;
-    }
-  } catch (e) {
-    console.error("Errore turni:", e);
-  }
-}
-  
-// --- 7. ZOOM E VOLANTINO ---
-const modal = document.getElementById("zoom-modal");
-const imgZoomato = document.getElementById("img-zoomato");
-const closeBtn = document.querySelector(".close-modal");
-
-function aprireZoom(src) {
-  if (!src || !modal || !imgZoomato) return;
-  modal.style.display = "block";
-  imgZoomato.src = src;
-}
-
-const turnoImg = document.getElementById('img-turno-attuale');
-if (turnoImg) {
-  turnoImg.onclick = function() { aprireZoom(this.src); };
-}
-
-if (closeBtn) {
-  closeBtn.onclick = () => { modal.style.display = "none"; };
-}
-
-async function caricaConfigurazioneApp() {
-  try {
-    const response = SHEET_CONFIG_CSV ? await fetch(SHEET_CONFIG_CSV) : null;
-    if (response) {
-      const text = await response.text();
-      const rows = parseCSV(text);
-      if (rows.length > 0) {
-        const linkVolantino = rows[0].find(cell => cell.startsWith('http'));
-        if (linkVolantino) {
-          document.getElementById('promo-link').href = linkVolantino;
-        }
-      }
-    }
-  } catch (error) {
-    console.error("Errore configurazione volantino:", error);
-  }
-}
-
-// Init all
-loadEvents();
-loadServices();
-caricaConfigurazioneApp();
-</script>
-</body>
-</html>
