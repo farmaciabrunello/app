@@ -197,136 +197,35 @@ const SHEET_EVENTI_CSV  = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_Ea
 const SHEET_SERVIZI_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_EaTRsfUeqaRmkHSa814SNam_pdpyybRgeM2VtbOsbsXfv_7WhSx469O_eSVEI8Xv01xDdEXzLRzM/pub?gid=513108596&single=true&output=csv";
 const SHEET_TURNI_CSV   = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_EaTRsfUeqaRmkHSa814SNam_pdpyybRgeM2VtbOsbsXfv_7WhSx469O_eSVEI8Xv01xDdEXzLRzM/pub?gid=2033273365&single=true&output=csv";
 
-// Helper conversione CSV standard (Eventi, Turni, ecc.)
-function csvToObjects(csvText) {
-  const lines = csvText.trim().split(/\r?\n/);
-  if (lines.length < 2) return [];
+// Parser CSV Universale Sicuro
+function parseCSV(text) {
+  let lines = text.trim().split(/\r?\n/);
+  let result = [];
   
-  const headers = lines[0].split(/[,;]/).map(h => h.replace(/^"|"$/g, '').trim().toLowerCase());
-  
-  return lines.slice(1).map(line => {
-    if (!line.trim()) return null;
-    
-    const values = [];
-    let current = '';
+  for (let i = 1; i < lines.length; i++) {
+    let row = [];
     let inQuotes = false;
-    for (let i = 0; i < line.length; i++) {
-      const char = line[i];
+    let entry = '';
+    let line = lines[i];
+    
+    for (let c = 0; c < line.length; c++) {
+      let char = line[c];
       if (char === '"') {
         inQuotes = !inQuotes;
       } else if ((char === ',' || char === ';') && !inQuotes) {
-        values.push(current.replace(/^"|"$/g, '').trim());
-        current = '';
+        row.push(entry.trim().replace(/^"|"$/g, ''));
+        entry = '';
       } else {
-        current += char;
+        entry += char;
       }
     }
-    values.push(current.replace(/^"|"$/g, '').trim());
-    
-    const obj = {};
-    headers.forEach((header, index) => {
-      obj[header] = values[index] || '';
-    });
-    return obj;
-  }).filter(Boolean);
+    row.push(entry.trim().replace(/^"|"$/g, ''));
+    result.push(row);
+  }
+  return result;
 }
 
-// Helper specifico per il foglio SERVIZI basato sulle 5 colonne in ordine preciso (A, B, C, D, E)
-function parseServiziCSV(csvText) {
-  const lines = csvText.trim().split(/\r?\n/);
-  if (lines.length < 2) return [];
-  
-  return lines.slice(1).map(line => {
-    if (!line.trim()) return null;
-    
-    const values = [];
-    let current = '';
-    let inQuotes = false;
-    for (let i = 0; i < line.length; i++) {
-      const char = line[i];
-      if (char === '"') {
-        inQuotes = !inQuotes;
-      } else if ((char === ',' || char === ';') && !inQuotes) {
-        values.push(current.replace(/^"|"$/g, '').trim());
-        current = '';
-      } else {
-        current += char;
-      }
-    }
-    values.push(current.replace(/^"|"$/g, '').trim());
-    
-    return {
-      titolo: values[0] || '',            // Colonna A: Titolo (Verde Home)
-      descrizione: values[1] || '',       // Colonna B: Descrizione breve (Nero Home)
-      immagineHome: values[2] || '',      // Colonna C: Immagine Home
-      immagineDettaglio: values[3] || '', // Colonna D: Immagine Nuova Scheda
-      testoDettaglio: values[4] || ''     // Colonna E: Testo Nuova Scheda
-    };
-  }).filter(Boolean);
-}
-
-// --- 2. LOGICA ONESIGNAL ---
-window.OneSignalDeferred = window.OneSignalDeferred || [];
-
-async function updateButtons() {
-  OneSignalDeferred.push(async function(OneSignal) {
-    try {
-      const isOptedIn = OneSignal.User.PushSubscription.optedIn;
-      const permission = OneSignal.Notifications.permission;
-
-      const homePanel = document.getElementById('home-notification-panel');
-      const settingsStatus = document.getElementById('settings-loading-status');
-      const settingsSubBtn = document.getElementById('settings-subscribe-btn');
-      const settingsUnsubBtn = document.getElementById('settings-unsubscribe-btn');
-
-      if (settingsStatus) settingsStatus.style.display = 'none';
-
-      if (isOptedIn && permission) {
-        if (homePanel) homePanel.style.display = 'none';
-        if (settingsSubBtn) settingsSubBtn.style.display = 'none';
-        if (settingsUnsubBtn) settingsUnsubBtn.style.display = 'block';
-      } else {
-        if (homePanel) homePanel.style.display = 'block';
-        if (settingsSubBtn) settingsSubBtn.style.display = 'block';
-        if (settingsUnsubBtn) settingsUnsubBtn.style.display = 'none';
-      }
-    } catch (err) {
-      console.error("Errore lettura stato OneSignal:", err);
-    }
-  });
-}
-
-OneSignalDeferred.push(function(OneSignal) {
-  updateButtons();
-  OneSignal.User.PushSubscription.addEventListener("change", function(event) {
-    updateButtons();
-  });
-});
-
-function gestisciIscrizione() {
-  OneSignalDeferred.push(async function(OneSignal) {
-    try {
-      await OneSignal.Notifications.requestPermission();
-      await OneSignal.User.PushSubscription.optIn();
-      setTimeout(updateButtons, 300);
-    } catch (err) {
-      console.error("Errore durante optIn:", err);
-    }
-  });
-}
-
-function gestisciDisiscrizione() {
-  OneSignalDeferred.push(async function(OneSignal) {
-    try {
-      await OneSignal.User.PushSubscription.optOut();
-      setTimeout(updateButtons, 300);
-    } catch (err) {
-      console.error("Errore durante optOut:", err);
-    }
-  });
-}
-
-// --- 3. NAVIGAZIONE INFERIORE ROBUSTA ---
+// --- 3. NAVIGAZIONE INFERIORE ---
 const navItems = document.querySelectorAll('.nav-item');
 const appSections = document.querySelectorAll('.app-section');
 
@@ -336,15 +235,10 @@ navItems.forEach(item => {
     this.classList.add('active');
 
     const targetId = this.getAttribute('data-target');
-
-    appSections.forEach(section => {
-      section.style.display = 'none';
-    });
+    appSections.forEach(section => { section.style.display = 'none'; });
 
     const targetSection = document.getElementById(targetId);
-    if (targetSection) {
-      targetSection.style.display = 'block';
-    }
+    if (targetSection) { targetSection.style.display = 'block'; }
 
     if (targetId === 'turni-section') {
       loadTurni();
@@ -355,6 +249,215 @@ navItems.forEach(item => {
   });
 });
 
-// --- 4. CARICAMENTO EVENTI DA CSV ---
+// --- 4. CARICAMENTO EVENTI ---
 async function loadEvents() {
-  const
+  const eventsList = document.getElementById('events-list');
+  const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1586015555751-63bb77f4322a?q=80&w=1000&auto=format&fit=crop';
+
+  try {
+    const response = await fetch(SHEET_EVENTI_CSV);
+    const text = await response.text();
+    const rows = parseCSV(text);
+
+    eventsList.innerHTML = '';
+    if (rows.length === 0) {
+      eventsList.innerHTML = '<div class="event-card"><div class="event-info">Nessun evento in programma.</div></div>';
+      return;
+    }
+
+    rows.forEach(row => {
+      const titolo = row[0] || 'Nuovo Evento';
+      const dataEv = row[1] || 'Prossimamente';
+      const imgUrl = (row[2] && row[2].startsWith('http')) ? row[2] : DEFAULT_IMAGE;
+
+      eventsList.innerHTML += `
+      <div class="event-card">
+        <img src="${imgUrl}" class="event-image" alt="${titolo}">
+        <div class="event-info">
+          <span class="event-date">${dataEv}</span>
+          <h4 class="event-title">${titolo}</h4>
+        </div>
+      </div>`;
+    });
+  } catch (error) {
+    console.error("Errore eventi:", error);
+  }
+}
+
+// --- 5. CARICAMENTO SERVIZI (COLONNE A, B, C, D, E) ---
+async function loadServices() {
+  const servicesList = document.getElementById('services-list');
+  const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?q=80&w=1000&auto=format&fit=crop';
+
+  try {
+    const response = await fetch(SHEET_SERVIZI_CSV);
+    const text = await response.text();
+    const rows = parseCSV(text);
+
+    servicesList.innerHTML = '';
+    if (rows.length === 0) {
+      servicesList.innerHTML = '<div class="service-card"><div class="event-info">Nessun servizio disponibile.</div></div>';
+      return;
+    }
+    
+    rows.forEach(row => {
+      const titolo = row[0] || '';
+      if (!titolo) return; // Salta righe vuote
+
+      const descrizione = row[1] || '';
+      const immagineHome = (row[2] && row[2].startsWith('http')) ? row[2] : DEFAULT_IMAGE;
+      const immagineDettaglio = (row[3] && row[3].startsWith('http')) ? row[3] : immagineHome;
+      // Prende tutto il testo unendo le colonne rimanenti in caso di virgole interne
+      const testoDettaglio = row.slice(4).join(', ') || 'Nessuna descrizione disponibile.';
+
+      const serviceData = { titolo, descrizione, immagineHome, immagineDettaglio, testoDettaglio };
+
+      const card = document.createElement('div');
+      card.className = 'service-card clickable-card';
+      card.innerHTML = `
+        <img src="${immagineHome}" class="service-image" alt="${titolo}">
+        <div class="event-info">
+          <h4 class="event-title" style="color: var(--primary-green); margin-bottom: 4px;">${titolo}</h4>
+          <span class="event-date" style="color: var(--text-primary); font-weight: normal; text-transform: none; font-size: 0.85rem;">${descrizione}</span>
+        </div>`;
+      
+      card.onclick = () => apriDettaglioServizio(serviceData);
+      servicesList.appendChild(card);
+    });
+  } catch (error) {
+    console.error("Errore servizi:", error);
+  }
+}
+
+function apriDettaglioServizio(service) {
+  appSections.forEach(section => { section.style.display = 'none'; });
+
+  const detailSection = document.getElementById('service-detail-section');
+  if (detailSection) detailSection.style.display = 'block';
+
+  document.getElementById('service-detail-title').innerText = service.titolo;
+  document.getElementById('service-detail-img').src = service.immagineDettaglio;
+  document.getElementById('service-detail-text').innerText = service.testoDettaglio;
+
+  navItems.forEach(nav => nav.classList.remove('active'));
+}
+
+function tornaAllaHomeDaServizio() {
+  appSections.forEach(section => { section.style.display = 'none'; });
+  document.getElementById('home-content').style.display = 'block';
+
+  navItems.forEach((nav, idx) => {
+    if (idx === 0) nav.classList.add('active');
+    else nav.classList.remove('active');
+  });
+}
+
+// --- 6. CARICAMENTO TURNI ---
+async function loadTurni() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  try {
+    const response = await fetch(SHEET_TURNI_CSV);
+    const text = await response.text();
+    const rows = parseCSV(text);
+
+    const containerAttuale = document.getElementById('img-turno-attuale');
+    const listaAltri = document.getElementById('lista-altri-turni');
+    if (listaAltri) listaAltri.innerHTML = '';
+
+    let trovato = false;
+
+    rows.forEach((row, index) => {
+      const inizioStr = row[0];
+      if (!inizioStr) return;
+      
+      const inizio = new Date(inizioStr);
+      let fine;
+      if (row[1]) {
+        fine = new Date(row[1]);
+        fine.setHours(23, 59, 59, 999);
+      } else {
+        fine = new Date(inizio);
+        fine.setDate(fine.getDate() + 7);
+      }
+
+      const imgTurno = row[2] || '';
+
+      if (today >= inizio && today <= fine) {
+        trovato = true;
+        if (containerAttuale && imgTurno) {
+          containerAttuale.src = imgTurno;
+        }
+        if (rows[index - 1] && rows[index - 1][2]) {
+          aggiungiMiniatura({ immagine: rows[index - 1][2] }, "Sett. Precedente");
+        }
+        if (rows[index + 1] && rows[index + 1][2]) {
+          aggiungiMiniatura({ immagine: rows[index + 1][2] }, "Sett. Successiva");
+        }
+      }
+    });
+
+    if (!trovato && rows.length > 0) {
+      const primoConImmagine = rows.find(r => r[2] && r[2].trim() !== "");
+      if (primoConImmagine && containerAttuale) {
+        containerAttuale.src = primoConImmagine[2];
+      }
+    }
+  } catch (e) {
+    console.error("Errore turni:", e);
+  }
+}
+
+function aggiungiMiniatura(turno, label) {
+  const div = document.createElement('div');
+  div.className = 'event-card';
+  div.style.flex = '0 0 140px';
+  div.innerHTML = `
+  <img src="${turno.immagine}" class="event-image" style="height:100px; object-fit: cover;">
+  <div class="event-info"><span class="event-date">${label}</span></div>`;
+  div.onclick = () => aprireZoom(turno.immagine);
+  document.getElementById('lista-altri-turni').appendChild(div);
+}
+
+// --- 7. ZOOM E VOLANTINO ---
+const modal = document.getElementById("zoom-modal");
+const imgZoomato = document.getElementById("img-zoomato");
+const closeBtn = document.querySelector(".close-modal");
+
+function aprireZoom(src) {
+  if (!src || !modal || !imgZoomato) return;
+  modal.style.display = "block";
+  imgZoomato.src = src;
+}
+
+const turnoImg = document.getElementById('img-turno-attuale');
+if (turnoImg) {
+  turnoImg.onclick = function() { aprireZoom(this.src); };
+}
+
+if (closeBtn) {
+  closeBtn.onclick = () => { modal.style.display = "none"; };
+}
+
+async function caricaConfigurazioneApp() {
+  try {
+    const response = await fetch(SHEET_CONFIG_CSV);
+    const text = await response.text();
+    const rows = parseCSV(text);
+    if (rows.length > 0 && rows[0][1]) {
+      const linkVolantino = rows[0][1].trim();
+      if (linkVolantino.startsWith('http')) {
+        document.getElementById('promo-link').href = linkVolantino;
+      }
+    }
+  } catch (error) {
+    console.error("Errore configurazione:", error);
+  }
+}
+
+// Init
+loadEvents();
+loadServices();
+caricaConfigurazioneApp();
+</script>
