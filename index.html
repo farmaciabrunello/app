@@ -201,7 +201,7 @@ const SHEET_EVENTI_CSV  = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_Ea
 const SHEET_SERVIZI_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_EaTRsfUeqaRmkHSa814SNam_pdpyybRgeM2VtbOsbsXfv_7WhSx469O_eSVEI8Xv01xDdEXzLRzM/pub?gid=513108596&single=true&output=csv";
 const SHEET_TURNI_CSV   = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_EaTRsfUeqaRmkHSa814SNam_pdpyybRgeM2VtbOsbsXfv_7WhSx469O_eSVEI8Xv01xDdEXzLRzM/pub?gid=2033273365&single=true&output=csv";
 
-// Parser CSV Resiliente
+// Helper Parser CSV avanzato che gestisce virgolette e virgole interne
 function parseCSV(text) {
   let lines = text.trim().split(/\r?\n/);
   let result = [];
@@ -229,6 +229,18 @@ function parseCSV(text) {
     }
   }
   return result;
+}
+
+// Parsing delle Date flessibile
+function parseDateString(dateStr) {
+  if (!dateStr) return null;
+  dateStr = dateStr.trim();
+  if (dateStr.includes('/')) {
+    const p = dateStr.split('/');
+    if (p.length === 3) return new Date(p[2], p[1] - 1, p[0]);
+  }
+  const d = new Date(dateStr);
+  return isNaN(d.getTime()) ? null : d;
 }
 
 // --- 2. LOGICA ONESIGNAL NOTIFICHE ---
@@ -318,8 +330,9 @@ navItems.forEach(item => {
   });
 });
 
-// --- 4. CARICAMENTO EVENTI ---
+// --- 4. CARICAMENTO EVENTI (CON NASCONDIGLIO SE VUOTO E DETTAGLIO) ---
 async function loadEvents() {
+  const eventsSection = document.querySelector('.events-section');
   const eventsList = document.getElementById('events-list');
   const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1586015555751-63bb77f4322a?q=80&w=1000&auto=format&fit=crop';
 
@@ -329,29 +342,53 @@ async function loadEvents() {
     const rows = parseCSV(text);
 
     eventsList.innerHTML = '';
-    if (rows.length === 0) {
-      eventsList.innerHTML = '<div class="event-card"><div class="event-info">Nessun evento in programma.</div></div>';
+    
+    // Se non ci sono eventi, nasconde completamente la sezione Prossimi Eventi
+    if (!rows || rows.length === 0) {
+      if (eventsSection) eventsSection.style.display = 'none';
       return;
+    } else {
+      if (eventsSection) eventsSection.style.display = 'block';
     }
 
     rows.forEach(row => {
       const titolo = row[0] || 'Nuovo Evento';
       const dataEv = row[1] || 'Prossimamente';
-      const imgUrl = (row[2] && row[2].startsWith('http')) ? row[2] : DEFAULT_IMAGE;
+      const immagineHome = (row[2] && row[2].startsWith('http')) ? row[2] : DEFAULT_IMAGE;
+      // Colonna D (indice 3): Testo dettagliato dell'evento
+      const testoDettaglio = row[3] || row.slice(3).join(', ') || 'Nessuna descrizione disponibile per questo evento.';
 
-      eventsList.innerHTML += `
-      <div class="event-card">
-        <img src="${imgUrl}" class="event-image" alt="${titolo}">
+      const eventData = { titolo, dataEv, immagineHome, testoDettaglio };
+
+      const card = document.createElement('div');
+      card.className = 'event-card clickable-card';
+      card.innerHTML = `
+        <img src="${immagineHome}" class="event-image" alt="${titolo}">
         <div class="event-info">
           <span class="event-date">${dataEv}</span>
           <h4 class="event-title">${titolo}</h4>
-        </div>
-      </div>`;
+        </div>`;
+      
+      card.onclick = () => apriDettaglioEvento(eventData);
+      eventsList.appendChild(card);
     });
   } catch (error) {
     console.error("Errore eventi:", error);
-    eventsList.innerHTML = '<div class="event-card"><div class="event-info">Errore caricamento eventi.</div></div>';
+    if (eventsSection) eventsSection.style.display = 'none';
   }
+}
+
+function apriDettaglioEvento(eventObj) {
+  appSections.forEach(section => { section.style.display = 'none'; });
+
+  const detailSection = document.getElementById('service-detail-section');
+  if (detailSection) detailSection.style.display = 'block';
+
+  document.getElementById('service-detail-title').innerText = eventObj.titolo;
+  document.getElementById('service-detail-img').src = eventObj.immagineHome;
+  document.getElementById('service-detail-text').innerText = eventObj.testoDettaglio;
+
+  navItems.forEach(nav => nav.classList.remove('active'));
 }
 
 // --- 5. CARICAMENTO SERVIZI (COLONNE A, B, C, D, E) ---
@@ -422,7 +459,7 @@ function tornaAllaHomeDaServizio() {
   });
 }
 
-// --- 6. CARICAMENTO TURNI ---
+// --- 6. CARICAMENTO TURNI CON FALLBACK AUTOMATICO ---
 async function loadTurni() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -437,42 +474,45 @@ async function loadTurni() {
     if (listaAltri) listaAltri.innerHTML = '';
 
     let trovato = false;
+    let primaImmagineValida = '';
 
     rows.forEach((row, index) => {
       const inizioStr = row[0];
+      const fineStr = row[1];
+      
+      const imgTurno = row.find(cell => cell.startsWith('http')) || '';
+      if (!primaImmagineValida && imgTurno) {
+        primaImmagineValida = imgTurno;
+      }
+
       if (!inizioStr) return;
       
-      const inizio = new Date(inizioStr);
-      let fine;
-      if (row[1]) {
-        fine = new Date(row[1]);
-        fine.setHours(23, 59, 59, 999);
-      } else {
+      const inizio = parseDateString(inizioStr);
+      let fine = parseDateString(fineStr);
+      
+      if (inizio && !fine) {
         fine = new Date(inizio);
         fine.setDate(fine.getDate() + 7);
       }
 
-      const imgTurno = row[2] || '';
-
-      if (today >= inizio && today <= fine) {
+      if (inizio && fine && today >= inizio && today <= fine) {
         trovato = true;
         if (containerAttuale && imgTurno) {
           containerAttuale.src = imgTurno;
         }
-        if (rows[index - 1] && rows[index - 1][2]) {
-          aggiungiMiniatura({ immagine: rows[index - 1][2] }, "Sett. Precedente");
+        if (rows[index - 1]) {
+          const imgPrev = rows[index - 1].find(c => c.startsWith('http'));
+          if (imgPrev) aggiungiMiniatura({ immagine: imgPrev }, "Sett. Precedente");
         }
-        if (rows[index + 1] && rows[index + 1][2]) {
-          aggiungiMiniatura({ immagine: rows[index + 1][2] }, "Sett. Successiva");
+        if (rows[index + 1]) {
+          const imgNext = rows[index + 1].find(c => c.startsWith('http'));
+          if (imgNext) aggiungiMiniatura({ immagine: imgNext }, "Sett. Successiva");
         }
       }
     });
 
-    if (!trovato && rows.length > 0) {
-      const primoConImmagine = rows.find(r => r[2] && r[2].trim() !== "");
-      if (primoConImmagine && containerAttuale) {
-        containerAttuale.src = primoConImmagine[2];
-      }
+    if (!trovato && primaImmagineValida && containerAttuale) {
+      containerAttuale.src = primaImmagineValida;
     }
   } catch (e) {
     console.error("Errore turni:", e);
@@ -512,13 +552,15 @@ if (closeBtn) {
 
 async function caricaConfigurazioneApp() {
   try {
-    const response = await fetch(SHEET_CONFIG_CSV);
-    const text = await response.text();
-    const rows = parseCSV(text);
-    if (rows.length > 0 && rows[0].length >= 2) {
-      const linkVolantino = rows[0][1].trim();
-      if (linkVolantino.startsWith('http')) {
-        document.getElementById('promo-link').href = linkVolantino;
+    const response = SHEET_CONFIG_CSV ? await fetch(SHEET_CONFIG_CSV) : null;
+    if (response) {
+      const text = await response.text();
+      const rows = parseCSV(text);
+      if (rows.length > 0) {
+        const linkVolantino = rows[0].find(cell => cell.startsWith('http'));
+        if (linkVolantino) {
+          document.getElementById('promo-link').href = linkVolantino;
+        }
       }
     }
   } catch (error) {
