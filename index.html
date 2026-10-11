@@ -119,6 +119,22 @@ OneSignalDeferred.push(async function(OneSignal) {
 </div>
 </section>
 
+<!-- Sezione Dettaglio Servizio (Nuova Scheda) -->
+<section id="service-detail-section" class="section" style="display:none; padding: 0 20px;">
+<div class="section-header" style="justify-content: flex-start; gap: 10px;">
+<button onclick="tornaAllaHomeDaServizio()" style="background: none; border: none; cursor: pointer; display: flex; align-items: center; color: var(--primary-green); font-weight: bold;">
+<span class="material-symbols-outlined" style="font-size: 20px;">arrow_back</span> Indietro
+</button>
+<h2 id="service-detail-title" style="margin: 0;">Dettaglio Servizio</h2>
+</div>
+<div class="service-detail-card" style="background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border: 1px solid var(--border-color);">
+<img id="service-detail-img" src="" alt="Immagine Servizio" style="width: 100%; height: auto; max-height: 300px; object-fit: cover; display: block;">
+<div style="padding: 20px;">
+<p id="service-detail-text" style="font-size: 1rem; line-height: 1.6; color: var(--text-primary); white-space: pre-line; margin: 0;"></p>
+</div>
+</div>
+</section>
+
 <!-- Sezione Impostazioni -->
 <section id="impostazioni-section" class="section" style="display:none; padding: 0 20px;">
 <div class="section-header">
@@ -276,10 +292,12 @@ navItems.forEach(item => {
     const homeContent = document.getElementById('home-content');
     const turniSection = document.getElementById('turni-section');
     const impostazioniSection = document.getElementById('impostazioni-section');
+    const serviceDetailSection = document.getElementById('service-detail-section');
 
     if (homeContent) homeContent.style.display = 'none';
     if (turniSection) turniSection.style.display = 'none';
     if (impostazioniSection) impostazioniSection.style.display = 'none';
+    if (serviceDetailSection) serviceDetailSection.style.display = 'none';
 
     if (label === 'TURNI') {
       if (turniSection) turniSection.style.display = 'block';
@@ -310,24 +328,24 @@ async function loadEvents() {
       eventsList.innerHTML = '<div class="event-card"><div class="event-info">Nessun evento in programma.</div></div>';
       return;
     }
-data.forEach(event => {
-  const imgUrl = (event.immagine && event.immagine.trim() !== "") ? event.immagine : DEFAULT_IMAGE;
-  eventsList.innerHTML += `
-  <div class="event-card">
-    <img src="${imgUrl}" class="event-image" alt="${event.titolo || 'Evento'}">
-    <div class="event-info">
-      <span class="event-date">${event.data || 'Prossimamente'}</span>
-      <h4 class="event-title">${event.titolo || 'Nuovo Evento'}</h4>
-    </div>
-  </div>`;
-});
+    data.forEach(event => {
+      const imgUrl = (event.immagine && event.immagine.trim() !== "") ? event.immagine : DEFAULT_IMAGE;
+      eventsList.innerHTML += `
+      <div class="event-card">
+        <img src="${imgUrl}" class="event-image" alt="${event.titolo || 'Evento'}">
+        <div class="event-info">
+          <span class="event-date">${event.data || 'Prossimamente'}</span>
+          <h4 class="event-title">${event.titolo || 'Nuovo Evento'}</h4>
+        </div>
+      </div>`;
+    });
   } catch (error) {
     console.error("Errore caricamento eventi CSV:", error);
     eventsList.innerHTML = '<div class="event-card"><div class="event-info">Errore di caricamento.</div></div>';
   }
 }
 
-// --- 5. CARICAMENTO SERVIZI DA CSV (IMMAGINI RETTANGOLARI) ---
+// --- 5. CARICAMENTO SERVIZI DA CSV (CON APERTURA DETTAGLIO) ---
 async function loadServices() {
   const servicesList = document.getElementById('services-list');
   const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?q=80&w=1000&auto=format&fit=crop';
@@ -344,22 +362,67 @@ async function loadServices() {
       return;
     }
     
-data.forEach(service => {
-  const imgUrl = (service.immagine && service.immagine.trim() !== "") ? service.immagine : DEFAULT_IMAGE;
-  const sottotitolo = service.descrizione || service.data || 'Servizio in farmacia';
-  servicesList.innerHTML += `
-  <div class="service-card">
-    <img src="${imgUrl}" class="service-image" alt="${service.titolo || 'Servizio'}">
-    <div class="event-info">
-      <span class="event-date">${sottotitolo}</span>
-      <h4 class="event-title">${service.titolo || 'Nuovo Servizio'}</h4>
-    </div>
-  </div>`;
-});
+    data.forEach((service, index) => {
+      const imgUrl = (service.immagine && service.immagine.trim() !== "") ? service.immagine : DEFAULT_IMAGE;
+      const sottotitolo = service.descrizione || service.data || 'Servizio in farmacia';
+      
+      const card = document.createElement('div');
+      card.className = 'service-card clickable-card';
+      card.innerHTML = `
+        <img src="${imgUrl}" class="service-image" alt="${service.titolo || 'Servizio'}">
+        <div class="event-info">
+          <span class="event-date">${sottotitolo}</span>
+          <h4 class="event-title">${service.titolo || 'Nuovo Servizio'}</h4>
+        </div>`;
+      
+      // Al click apre la scheda dettaglio con immagine colonna D e testo colonna E
+      card.onclick = () => apriDettaglioServizio(service);
+      servicesList.appendChild(card);
+    });
   } catch (error) {
     console.error("Errore caricamento servizi CSV:", error);
     servicesList.innerHTML = '<div class="service-card"><div class="event-info">Errore di caricamento.</div></div>';
   }
+}
+
+function apriDettaglioServizio(service) {
+  const homeContent = document.getElementById('home-content');
+  const turniSection = document.getElementById('turni-section');
+  const impostazioniSection = document.getElementById('impostazioni-section');
+  const serviceDetailSection = document.getElementById('service-detail-section');
+
+  if (homeContent) homeContent.style.display = 'none';
+  if (turniSection) turniSection.style.display = 'none';
+  if (impostazioniSection) impostazioniSection.style.display = 'none';
+  if (serviceDetailSection) serviceDetailSection.style.display = 'block';
+
+  // Popola titolo, immagine (colonna D) e testo (colonna E)
+  document.getElementById('service-detail-title').innerText = service.titolo || 'Dettaglio Servizio';
+  
+  const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?q=80&w=1000&auto=format&fit=crop';
+  // Supponendo che nel CSV la colonna D corrisponda a 'immagine' o 'd' e la colonna E a 'testo' o 'e'
+  const imgColD = service.immagine || service.d || DEFAULT_IMAGE;
+  const textColE = service.testo || service.e || service.descrizione || 'Nessuna descrizione disponibile.';
+
+  document.getElementById('service-detail-img').src = imgColD;
+  document.getElementById('service-detail-text').innerText = textColE;
+
+  // Rimuove lo stato attivo dalla barra di navigazione inferiore
+  navItems.forEach(nav => nav.navIndex !== undefined ? null : nav.classList.remove('active'));
+}
+
+function tornaAllaHomeDaServizio() {
+  const homeContent = document.getElementById('home-content');
+  const serviceDetailSection = document.getElementById('service-detail-section');
+
+  if (serviceDetailSection) serviceDetailSection.style.display = 'none';
+  if (homeContent) homeContent.style.display = 'block';
+
+  // Riattiva l'icona Home nella barra di navigazione
+  navItems.forEach((nav, idx) => {
+    if (idx === 0) nav.classList.add('active');
+    else nav.classList.remove('active');
+  });
 }
 
 // --- 6. CARICAMENTO TURNI DA CSV ---
