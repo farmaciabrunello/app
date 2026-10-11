@@ -201,7 +201,7 @@ const SHEET_EVENTI_CSV  = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_Ea
 const SHEET_SERVIZI_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_EaTRsfUeqaRmkHSa814SNam_pdpyybRgeM2VtbOsbsXfv_7WhSx469O_eSVEI8Xv01xDdEXzLRzM/pub?gid=513108596&single=true&output=csv";
 const SHEET_TURNI_CSV   = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_EaTRsfUeqaRmkHSa814SNam_pdpyybRgeM2VtbOsbsXfv_7WhSx469O_eSVEI8Xv01xDdEXzLRzM/pub?gid=2033273365&single=true&output=csv";
 
-// Parser CSV Resiliente
+// Helper Parser CSV avanzato che gestisce virgolette e virgole interne
 function parseCSV(text) {
   let lines = text.trim().split(/\r?\n/);
   let result = [];
@@ -229,6 +229,18 @@ function parseCSV(text) {
     }
   }
   return result;
+}
+
+// Parsing delle Date flessibile (supporta YYYY-MM-DD e DD/MM/YYYY)
+function parseDateString(dateStr) {
+  if (!dateStr) return null;
+  dateStr = dateStr.trim();
+  if (dateStr.includes('/')) {
+    const p = dateStr.split('/');
+    if (p.length === 3) return new Date(p[2], p[1] - 1, p[0]);
+  }
+  const d = new Date(dateStr);
+  return isNaN(d.getTime()) ? null : d;
 }
 
 // --- 2. LOGICA ONESIGNAL NOTIFICHE ---
@@ -307,229 +319,4 @@ navItems.forEach(item => {
     appSections.forEach(section => { section.style.display = 'none'; });
 
     const targetSection = document.getElementById(targetId);
-    if (targetSection) { targetSection.style.display = 'block'; }
-
-    if (targetId === 'turni-section') {
-      loadTurni();
-    } else if (targetId === 'home-content') {
-      loadEvents();
-      loadServices();
-    }
-  });
-});
-
-// --- 4. CARICAMENTO EVENTI ---
-async function loadEvents() {
-  const eventsList = document.getElementById('events-list');
-  const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1586015555751-63bb77f4322a?q=80&w=1000&auto=format&fit=crop';
-
-  try {
-    const response = await fetch(SHEET_EVENTI_CSV);
-    const text = await response.text();
-    const rows = parseCSV(text);
-
-    eventsList.innerHTML = '';
-    if (rows.length === 0) {
-      eventsList.innerHTML = '<div class="event-card"><div class="event-info">Nessun evento in programma.</div></div>';
-      return;
-    }
-
-    rows.forEach(row => {
-      const titolo = row[0] || 'Nuovo Evento';
-      const dataEv = row[1] || 'Prossimamente';
-      const imgUrl = (row[2] && row[2].startsWith('http')) ? row[2] : DEFAULT_IMAGE;
-
-      eventsList.innerHTML += `
-      <div class="event-card">
-        <img src="${imgUrl}" class="event-image" alt="${titolo}">
-        <div class="event-info">
-          <span class="event-date">${dataEv}</span>
-          <h4 class="event-title">${titolo}</h4>
-        </div>
-      </div>`;
-    });
-  } catch (error) {
-    console.error("Errore eventi:", error);
-    eventsList.innerHTML = '<div class="event-card"><div class="event-info">Errore caricamento eventi.</div></div>';
-  }
-}
-
-// --- 5. CARICAMENTO SERVIZI (COLONNE A, B, C, D, E) ---
-async function loadServices() {
-  const servicesList = document.getElementById('services-list');
-  const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?q=80&w=1000&auto=format&fit=crop';
-
-  try {
-    const response = await fetch(SHEET_SERVIZI_CSV);
-    const text = await response.text();
-    const rows = parseCSV(text);
-
-    servicesList.innerHTML = '';
-    if (rows.length === 0) {
-      servicesList.innerHTML = '<div class="service-card"><div class="event-info">Nessun servizio disponibile.</div></div>';
-      return;
-    }
-    
-    rows.forEach(row => {
-      const titolo = row[0] || '';
-      if (!titolo) return;
-
-      const descrizione = row[1] || '';
-      const immagineHome = (row[2] && row[2].startsWith('http')) ? row[2] : DEFAULT_IMAGE;
-      const immagineDettaglio = (row[3] && row[3].startsWith('http')) ? row[3] : immagineHome;
-      const testoDettaglio = row[4] || row.slice(4).join(', ') || 'Nessuna descrizione disponibile.';
-
-      const serviceData = { titolo, descrizione, immagineHome, immagineDettaglio, testoDettaglio };
-
-      const card = document.createElement('div');
-      card.className = 'service-card clickable-card';
-      card.innerHTML = `
-        <img src="${immagineHome}" class="service-image" alt="${titolo}">
-        <div class="event-info">
-          <h4 class="event-title" style="color: var(--primary-green); margin-bottom: 4px;">${titolo}</h4>
-          <span class="event-date" style="color: var(--text-primary); font-weight: normal; text-transform: none; font-size: 0.85rem;">${descrizione}</span>
-        </div>`;
-      
-      card.onclick = () => apriDettaglioServizio(serviceData);
-      servicesList.appendChild(card);
-    });
-  } catch (error) {
-    console.error("Errore servizi:", error);
-    servicesList.innerHTML = '<div class="service-card"><div class="event-info">Errore caricamento servizi.</div></div>';
-  }
-}
-
-function apriDettaglioServizio(service) {
-  appSections.forEach(section => { section.style.display = 'none'; });
-
-  const detailSection = document.getElementById('service-detail-section');
-  if (detailSection) detailSection.style.display = 'block';
-
-  document.getElementById('service-detail-title').innerText = service.titolo;
-  document.getElementById('service-detail-img').src = service.immagineDettaglio;
-  document.getElementById('service-detail-text').innerText = service.testoDettaglio;
-
-  navItems.forEach(nav => nav.classList.remove('active'));
-}
-
-function tornaAllaHomeDaServizio() {
-  appSections.forEach(section => { section.style.display = 'none'; });
-  document.getElementById('home-content').style.display = 'block';
-
-  navItems.forEach((nav, idx) => {
-    if (idx === 0) nav.classList.add('active');
-    else nav.classList.remove('active');
-  });
-}
-
-// --- 6. CARICAMENTO TURNI ---
-async function loadTurni() {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  try {
-    const response = await fetch(SHEET_TURNI_CSV);
-    const text = await response.text();
-    const rows = parseCSV(text);
-
-    const containerAttuale = document.getElementById('img-turno-attuale');
-    const listaAltri = document.getElementById('lista-altri-turni');
-    if (listaAltri) listaAltri.innerHTML = '';
-
-    let trovato = false;
-
-    rows.forEach((row, index) => {
-      const inizioStr = row[0];
-      if (!inizioStr) return;
-      
-      const inizio = new Date(inizioStr);
-      let fine;
-      if (row[1]) {
-        fine = new Date(row[1]);
-        fine.setHours(23, 59, 59, 999);
-      } else {
-        fine = new Date(inizio);
-        fine.setDate(fine.getDate() + 7);
-      }
-
-      const imgTurno = row[2] || '';
-
-      if (today >= inizio && today <= fine) {
-        trovato = true;
-        if (containerAttuale && imgTurno) {
-          containerAttuale.src = imgTurno;
-        }
-        if (rows[index - 1] && rows[index - 1][2]) {
-          aggiungiMiniatura({ immagine: rows[index - 1][2] }, "Sett. Precedente");
-        }
-        if (rows[index + 1] && rows[index + 1][2]) {
-          aggiungiMiniatura({ immagine: rows[index + 1][2] }, "Sett. Successiva");
-        }
-      }
-    });
-
-    if (!trovato && rows.length > 0) {
-      const primoConImmagine = rows.find(r => r[2] && r[2].trim() !== "");
-      if (primoConImmagine && containerAttuale) {
-        containerAttuale.src = primoConImmagine[2];
-      }
-    }
-  } catch (e) {
-    console.error("Errore turni:", e);
-  }
-}
-
-function aggiungiMiniatura(turno, label) {
-  const div = document.createElement('div');
-  div.className = 'event-card';
-  div.style.flex = '0 0 140px';
-  div.innerHTML = `
-  <img src="${turno.immagine}" class="event-image" style="height:100px; object-fit: cover;">
-  <div class="event-info"><span class="event-date">${label}</span></div>`;
-  div.onclick = () => aprireZoom(turno.immagine);
-  document.getElementById('lista-altri-turni').appendChild(div);
-}
-
-// --- 7. ZOOM E VOLANTINO ---
-const modal = document.getElementById("zoom-modal");
-const imgZoomato = document.getElementById("img-zoomato");
-const closeBtn = document.querySelector(".close-modal");
-
-function aprireZoom(src) {
-  if (!src || !modal || !imgZoomato) return;
-  modal.style.display = "block";
-  imgZoomato.src = src;
-}
-
-const turnoImg = document.getElementById('img-turno-attuale');
-if (turnoImg) {
-  turnoImg.onclick = function() { aprireZoom(this.src); };
-}
-
-if (closeBtn) {
-  closeBtn.onclick = () => { modal.style.display = "none"; };
-}
-
-async function caricaConfigurazioneApp() {
-  try {
-    const response = await fetch(SHEET_CONFIG_CSV);
-    const text = await response.text();
-    const rows = parseCSV(text);
-    if (rows.length > 0 && rows[0].length >= 2) {
-      const linkVolantino = rows[0][1].trim();
-      if (linkVolantino.startsWith('http')) {
-        document.getElementById('promo-link').href = linkVolantino;
-      }
-    }
-  } catch (error) {
-    console.error("Errore configurazione volantino:", error);
-  }
-}
-
-// Init all
-loadEvents();
-loadServices();
-caricaConfigurazioneApp();
-</script>
-</body>
-</html>
+    if (target
