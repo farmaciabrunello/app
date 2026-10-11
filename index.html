@@ -459,10 +459,9 @@ function tornaAllaHomeDaServizio() {
   });
 }
 
-// --- 6. CARICAMENTO TURNI CON FALLBACK AUTOMATICO ---
+// --- 6. CARICAMENTO TURNI CON CAMBIO ORARIO ALLE 08:45 ---
 async function loadTurni() {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const now = new Date(); // Prende data e ora attuali esatte
 
   try {
     const response = await fetch(SHEET_TURNI_CSV);
@@ -488,14 +487,23 @@ async function loadTurni() {
       if (!inizioStr) return;
       
       const inizio = parseDateString(inizioStr);
-      let fine = parseDateString(fineStr);
+      if (!inizio) return;
       
-      if (inizio && !fine) {
+      // Imposta l'orario di inizio turno alle 08:45:00 spaccate
+      inizio.setHours(8, 45, 0, 0);
+
+      let fine = parseDateString(fineStr);
+      if (fine) {
+        // Il turno scade alle 08:45:00 del giorno di fine (quindi copre fino alle 08:44:59)
+        fine.setHours(8, 45, 0, 0);
+      } else {
+        // Se non è specificata la fine, dura 7 giorni esatti fino alle 08:45:00
         fine = new Date(inizio);
         fine.setDate(fine.getDate() + 7);
       }
 
-      if (inizio && fine && today >= inizio && today <= fine) {
+      // Controlla se il momento attuale si trova esattamente tra inizio (incluso) e fine (escluso)
+      if (now >= inizio && now < fine) {
         trovato = true;
         if (containerAttuale && imgTurno) {
           containerAttuale.src = imgTurno;
@@ -511,6 +519,7 @@ async function loadTurni() {
       }
     });
 
+    // Fallback se nessuna data corrisponde
     if (!trovato && primaImmagineValida && containerAttuale) {
       containerAttuale.src = primaImmagineValida;
     }
@@ -518,18 +527,7 @@ async function loadTurni() {
     console.error("Errore turni:", e);
   }
 }
-
-function aggiungiMiniatura(turno, label) {
-  const div = document.createElement('div');
-  div.className = 'event-card';
-  div.style.flex = '0 0 140px';
-  div.innerHTML = `
-  <img src="${turno.immagine}" class="event-image" style="height:100px; object-fit: cover;">
-  <div class="event-info"><span class="event-date">${label}</span></div>`;
-  div.onclick = () => aprireZoom(turno.immagine);
-  document.getElementById('lista-altri-turni').appendChild(div);
-}
-
+  
 // --- 7. ZOOM E VOLANTINO ---
 const modal = document.getElementById("zoom-modal");
 const imgZoomato = document.getElementById("img-zoomato");
