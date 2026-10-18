@@ -130,7 +130,7 @@ body {
   display: none;
 }
 
-/* Card degli Eventi (Proporzione Instagram 4:5) */
+/* Card degli Eventi (Proporzione Instagram 4:5 in Home) */
 .event-card {
   flex: 0 0 65%;
   max-width: 260px;
@@ -153,7 +153,7 @@ body {
   background-color: #f0f0f0;
 }
 
-/* Card dei Servizi (Rettangolare 16:9) */
+/* Card dei Servizi (Rettangolare 16:9 in Home) */
 .service-card {
   flex: 0 0 70%;
   max-width: 280px;
@@ -196,7 +196,7 @@ body {
   margin: 0;
 }
 
-/* --- 6. SCHEDA DETTAGLIO EVENTO / SERVIZIO --- */
+/* --- 6. SCHEDA DETTAGLIO EVENTO / SERVIZIO (IMMAGINE INTERA COMPLETA) --- */
 .service-detail-card {
   background: white;
   border-radius: 16px;
@@ -207,33 +207,33 @@ body {
 }
 
 #service-detail-img {
-  width: 100%;
-  height: auto;
-  aspect-ratio: 4 / 5;
-  max-height: 70vh;
-  object-fit: contain;
-  background-color: #000000;
-  display: block;
-  margin: 0 auto;
+  width: 100% !important;
+  height: auto !important;
+  max-height: none !important;
+  aspect-ratio: auto !important;
+  object-fit: contain !important;
+  display: block !important;
+  margin: 0 auto !important;
 }
 
-/* --- 7. SEZIONE TURNI --- */
+/* --- 7. SEZIONE TURNI (LOCANDINA INTERA SENZA TAGLI) --- */
 .shift-card-main {
-  width: 100%;
-  max-width: 380px;
-  margin: 0 auto;
-  border-radius: 16px;
-  overflow: hidden;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 auto !important;
+  border-radius: 16px !important;
+  overflow: hidden !important;
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
   border: 1px solid var(--border-color);
   background-color: var(--bg-card);
 }
 
 #img-turno-attuale {
-  width: 100%;
-  max-height: 350px;
-  object-fit: cover;
-  display: block;
+  width: 100% !important;
+  height: auto !important;
+  max-height: none !important;
+  object-fit: contain !important;
+  display: block !important;
 }
 
 /* --- 8. NAVIGAZIONE INFERIORE --- */
