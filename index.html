@@ -103,7 +103,7 @@ body.modal-open .scrollable-content {
   align-items: center;
   justify-content: center;
   line-height: 1;
-  border: none; /* Rimosso il bordo bianco */
+  border: none;
 }
 
 .close-modal:active {
@@ -219,8 +219,8 @@ body.modal-open .scrollable-content {
 </div>
 </section>
 
-<!-- Sezione Dettaglio Servizio (Nuova Scheda) -->
-<p id="service-detail-text" style="font-size: 1rem; line-height: 1.6; color: var(--text-primary); white-space: pre-wrap; margin: 0;"></p>
+<!-- Sezione Dettaglio Servizio/Evento -->
+<section id="service-detail-section" class="app-section" style="display:none; padding: 0 20px;">
 <div class="section-header" style="justify-content: flex-start; gap: 10px;">
 <button onclick="tornaAllaHomeDaServizio()" style="background: none; border: none; cursor: pointer; display: flex; align-items: center; color: var(--primary-green); font-weight: bold; font-size: 1rem;">
 <span class="material-symbols-outlined" style="font-size: 22px;">arrow_back</span> Indietro
@@ -230,7 +230,7 @@ body.modal-open .scrollable-content {
 <img id="service-detail-img" src="" alt="Immagine Servizio" style="width: 100%; height: auto; max-height: 320px; object-fit: cover; display: block;">
 <div style="padding: 20px;">
 <h2 id="service-detail-title" style="font-size: 1.25rem; color: var(--primary-green); margin-bottom: 12px;"></h2>
-<p id="service-detail-text" style="font-size: 1rem; line-height: 1.6; color: var(--text-primary); white-space: pre-line; margin: 0;"></p>
+<p id="service-detail-text" style="font-size: 1rem; line-height: 1.6; color: var(--text-primary); white-space: pre-wrap; margin: 0;"></p>
 </div>
 </div>
 </section>
@@ -327,6 +327,16 @@ function parseDateString(dateStr) {
   }
   const d = new Date(dateStr);
   return isNaN(d.getTime()) ? null : d;
+}
+
+// Helper per la formattazione dei testi con a capo (\n o <br>)
+function formattaTestoDettaglio(testo) {
+  if (!testo) return '';
+  return testo
+    .replaceAll('\\n', '\n')
+    .replaceAll('<br>', '\n')
+    .replaceAll('<br/>', '\n')
+    .replaceAll('<br />', '\n');
 }
 
 // --- 2. LOGICA ONESIGNAL NOTIFICHE ---
@@ -473,9 +483,9 @@ function apriDettaglioEvento(eventObj) {
   const detailSection = document.getElementById('service-detail-section');
   if (detailSection) detailSection.style.display = 'block';
 
-  document.getElementById('service-detail-title').innerText = eventObj.titolo;
+  document.getElementById('service-detail-title').textContent = eventObj.titolo;
   document.getElementById('service-detail-img').src = eventObj.immagineHome;
-  document.getElementById('service-detail-text').innerText = eventObj.testoDettaglio;
+  document.getElementById('service-detail-text').textContent = formattaTestoDettaglio(eventObj.testoDettaglio);
 
   navItems.forEach(nav => nav.classList.remove('active'));
 }
@@ -525,22 +535,15 @@ async function loadServices() {
   }
 }
 
-function apriDettaglioEvento(eventObj) {
+function apriDettaglioServizio(service) {
   appSections.forEach(section => { section.style.display = 'none'; });
 
   const detailSection = document.getElementById('service-detail-section');
   if (detailSection) detailSection.style.display = 'block';
 
-  document.getElementById('service-detail-title').innerText = eventObj.titolo;
-  document.getElementById('service-detail-img').src = eventObj.immagineHome;
-  
-  // Converte sia \n grezzi che tag <br> in vera interruzione di riga
-  let testoFormattato = (eventObj.testoDettaglio || '')
-    .replaceAll('\\n', '\n')
-    .replaceAll('<br>', '\n')
-    .replaceAll('<br/>', '\n');
-
-  document.getElementById('service-detail-text').textContent = testoFormattato;
+  document.getElementById('service-detail-title').textContent = service.titolo;
+  document.getElementById('service-detail-img').src = service.immagineDettaglio;
+  document.getElementById('service-detail-text').textContent = formattaTestoDettaglio(service.testoDettaglio);
 
   navItems.forEach(nav => nav.classList.remove('active'));
 }
@@ -669,7 +672,6 @@ if (zoomContainer) {
       initialDistance = getDistance(e.touches);
       startScale = currentScale;
     } else if (e.touches.length === 1) {
-      // Gestione doppio tap per zoom rapido
       const now = new Date().getTime();
       if (now - lastTap < 300) {
         if (currentScale > 1) {
