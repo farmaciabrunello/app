@@ -75,6 +75,10 @@ body {
     overflow: hidden;
 }
 
+.dettaglio-evento {
+  white-space: pre-wrap;
+}
+
 .section-header {
     display: flex;
     justify-content: space-between;
