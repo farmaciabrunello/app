@@ -19,7 +19,7 @@
 <!-- Collegamento al Manifest -->
 <link rel="manifest" href="manifest.json">
 <title>Farmacia Brunello</title>
-<link rel="stylesheet" href="style.css?v=1.1">
+<link rel="stylesheet" href="style.css?v=1.2">
 
 <!-- Libreria OneSignal -->
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
@@ -230,7 +230,7 @@ body.modal-open .scrollable-content {
 <img id="service-detail-img" src="" alt="Immagine Servizio" style="width: 100%; height: auto; max-height: 320px; object-fit: cover; display: block;">
 <div style="padding: 20px;">
 <h2 id="service-detail-title" style="font-size: 1.25rem; color: var(--primary-green); margin-bottom: 12px;"></h2>
-<p id="service-detail-text" style="font-size: 1rem; line-height: 1.6; color: var(--text-primary); white-space: pre-wrap; margin: 0;"></p>
+<p id="service-detail-text" style="font-size: 1rem; line-height: 1.6; color: var(--text-primary); margin: 0;"></p>
 </div>
 </div>
 </section>
@@ -329,14 +329,12 @@ function parseDateString(dateStr) {
   return isNaN(d.getTime()) ? null : d;
 }
 
-// Helper per la formattazione dei testi con a capo (\n o <br>)
+// Helper per la formattazione dei testi con a capo (converte \n in <br>)
 function formattaTestoDettaglio(testo) {
   if (!testo) return '';
   return testo
-    .replaceAll('\\n', '\n')
-    .replaceAll('<br>', '\n')
-    .replaceAll('<br/>', '\n')
-    .replaceAll('<br />', '\n');
+    .replaceAll('\\n', '<br>')
+    .replaceAll('\n', '<br>');
 }
 
 // --- 2. LOGICA ONESIGNAL NOTIFICHE ---
@@ -485,7 +483,9 @@ function apriDettaglioEvento(eventObj) {
 
   document.getElementById('service-detail-title').textContent = eventObj.titolo;
   document.getElementById('service-detail-img').src = eventObj.immagineHome;
-  document.getElementById('service-detail-text').textContent = formattaTestoDettaglio(eventObj.testoDettaglio);
+  
+  // Usa innerHTML per permettere il rendering dei tag <b> e <br>
+  document.getElementById('service-detail-text').innerHTML = formattaTestoDettaglio(eventObj.testoDettaglio);
 
   navItems.forEach(nav => nav.classList.remove('active'));
 }
@@ -543,7 +543,9 @@ function apriDettaglioServizio(service) {
 
   document.getElementById('service-detail-title').textContent = service.titolo;
   document.getElementById('service-detail-img').src = service.immagineDettaglio;
-  document.getElementById('service-detail-text').textContent = formattaTestoDettaglio(service.testoDettaglio);
+
+  // Usa innerHTML per permettere il rendering dei tag <b> e <br>
+  document.getElementById('service-detail-text').innerHTML = formattaTestoDettaglio(service.testoDettaglio);
 
   navItems.forEach(nav => nav.classList.remove('active'));
 }
